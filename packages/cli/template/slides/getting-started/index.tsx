@@ -13,49 +13,79 @@ import zeaburLogo from './assets/zeabur.svg';
 export const design: DesignSystem = {
   palette: {
     bg: '#08090a',
-    text: '#f7f8f8',
-    accent: '#7170ff',
+    text: '#e6e6e6',
+    accent: '#a8a8ff',
+    accent2: '#5e6ad2',
+    surface: '#0e0f12',
+    surfaceAlt: '#1a1c21',
+    muted: '#6f727c',
+    border: '#2a2d35',
+    code: '#f7f8f8',
+    comment: '#6f727c',
   },
   fonts: {
     display: '"Inter", "SF Pro Display", system-ui, -apple-system, sans-serif',
     body: '"Inter", "SF Pro Display", system-ui, -apple-system, sans-serif',
+    mono: '"JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace',
   },
   typeScale: {
-    hero: 168,
-    body: 36,
+    hero: 146,
+    heading: 80,
+    body: 54,
+    code: 24,
+    label: 22,
+    chartLabel: 28,
+    caption: 18,
   },
   radius: 16,
 };
 
-// ─── Local (non-tweakable) constants ──────────────────────────────────────────
-// Mirrors of the panel tokens for template-string / arithmetic use, plus the
-// secondary palette and the mono font (kept hard-coded — outside what the
-// Design panel currently exposes).
+// ─── Token aliases ────────────────────────────────────────────────────────────
+// These all resolve to CSS variables, so unsaved Design panel drafts update
+// every page instantly.
 const palette = {
-  bg: design.palette.bg,
-  text: design.palette.text,
-  accent: design.palette.accent,
-  surface: '#0e0f12',
-  surfaceHi: '#14161a',
-  surfaceMax: '#1a1c21',
-  textSoft: '#c7c9d1',
-  muted: '#6f727c',
-  dim: '#3e4048',
-  border: 'rgba(255,255,255,0.07)',
-  borderBright: 'rgba(255,255,255,0.14)',
-  accentSoft: '#a3a0ff',
-  accent2: '#5e6ad2',
-  mint: '#68cc9a',
-  amber: '#e0b25c',
-  inspect: '#3b82f6',
-  inspectFill: 'rgba(59,130,246,0.10)',
+  bg: 'var(--osd-bg)',
+  text: 'var(--osd-text)',
+  accent: 'var(--osd-accent)',
+  surface: 'var(--osd-surface)',
+  surfaceHi: 'color-mix(in srgb, var(--osd-surface-alt) 72%, var(--osd-text))',
+  surfaceMax: 'var(--osd-surface-alt)',
+  textSoft: 'color-mix(in srgb, var(--osd-text) 72%, var(--osd-muted))',
+  muted: 'var(--osd-muted)',
+  dim: 'color-mix(in srgb, var(--osd-muted) 56%, var(--osd-bg))',
+  border: 'var(--osd-border)',
+  borderBright: 'color-mix(in srgb, var(--osd-border) 68%, var(--osd-text))',
+  accentSoft: 'color-mix(in srgb, var(--osd-accent) 76%, var(--osd-text))',
+  accent2: 'var(--osd-accent-2)',
+  code: 'var(--osd-code)',
+  comment: 'var(--osd-comment)',
+  mint: 'color-mix(in srgb, var(--osd-accent-2) 55%, #68cc9a)',
+  amber: 'color-mix(in srgb, var(--osd-accent) 36%, #e0b25c)',
+  inspect: 'var(--osd-accent-2)',
+  inspectFill: 'color-mix(in srgb, var(--osd-accent-2) 10%, transparent)',
 };
 
 const font = {
-  sans: design.fonts.body,
-  display: design.fonts.display,
-  mono: '"JetBrains Mono", "SF Mono", ui-monospace, Menlo, monospace',
+  sans: 'var(--osd-font-body)',
+  display: 'var(--osd-font-display)',
+  mono: 'var(--osd-font-mono)',
 };
+
+const size = {
+  hero: 'var(--osd-size-hero)',
+  heading: 'var(--osd-size-heading)',
+  body: 'var(--osd-size-body)',
+  code: 'var(--osd-size-code)',
+  label: 'var(--osd-size-label)',
+  chartLabel: 'var(--osd-size-chart-label)',
+  caption: 'var(--osd-size-caption)',
+  small: 'calc(var(--osd-size-caption) * 0.78)',
+  title: 'calc(var(--osd-size-heading) * 1.1)',
+  section: 'calc(var(--osd-size-heading) * 1.5)',
+} as const;
+
+const alpha = (color: string, amount: number) =>
+  `color-mix(in srgb, ${color} ${amount}%, transparent)`;
 
 const fill = {
   width: '100%',
@@ -112,7 +142,7 @@ const styles = `
   }
   @keyframes gs-morph {
     0%, 30% { color: ${palette.text}; text-shadow: 0 0 0 transparent; }
-    55%     { color: ${palette.accent}; text-shadow: 0 0 28px ${palette.accent}55; }
+    55%     { color: ${palette.accent}; text-shadow: 0 0 28px ${alpha(palette.accent, 35)}; }
     100%    { color: ${palette.accent}; text-shadow: 0 0 0 transparent; }
   }
   @keyframes gs-strike {
@@ -120,8 +150,8 @@ const styles = `
     to   { background-size: 100% 1px; }
   }
   @keyframes gs-pulse {
-    0%, 100% { box-shadow: 0 0 0 0 ${palette.inspect}00; }
-    50%      { box-shadow: 0 0 0 8px ${palette.inspect}22; }
+    0%, 100% { box-shadow: 0 0 0 0 ${alpha(palette.inspect, 0)}; }
+    50%      { box-shadow: 0 0 0 8px ${alpha(palette.inspect, 14)}; }
   }
   .es-fadeUp { opacity: 0; animation: es-fadeUp 0.9s cubic-bezier(.2,.7,.2,1) forwards; }
   .es-fadeIn { opacity: 0; animation: es-fadeIn 1.2s ease forwards; }
@@ -189,7 +219,7 @@ const Eyebrow = ({
     className={className}
     style={{
       fontFamily: font.mono,
-      fontSize: 22,
+      fontSize: size.label,
       letterSpacing: '0.18em',
       textTransform: 'uppercase',
       color: palette.muted,
@@ -258,7 +288,7 @@ const WindowShell = ({
           flex: 1,
           textAlign: 'center',
           fontFamily: font.mono,
-          fontSize: 20,
+          fontSize: size.caption,
           color: palette.muted,
           letterSpacing: '0.02em',
         }}
@@ -318,7 +348,7 @@ const AgentLine = ({
         style={{
           flex: '0 0 110px',
           fontFamily: font.mono,
-          fontSize: 20,
+          fontSize: size.caption,
           letterSpacing: '0.12em',
           textTransform: 'uppercase',
           color,
@@ -331,7 +361,7 @@ const AgentLine = ({
         style={{
           flex: 1,
           fontFamily: font.mono,
-          fontSize: 26,
+          fontSize: size.code,
           color: palette.textSoft,
           lineHeight: 1.45,
         }}
@@ -387,7 +417,7 @@ const LogoCard = ({
     <div
       style={{
         fontFamily: font.mono,
-        fontSize: 22,
+        fontSize: size.label,
         color: palette.textSoft,
         letterSpacing: '0.02em',
       }}
@@ -421,7 +451,7 @@ const Cover: Page = () => (
           style={{
             animationDelay: '0.05s',
             fontFamily: font.mono,
-            fontSize: 20,
+            fontSize: size.caption,
             color: palette.muted,
             border: `1px solid ${palette.border}`,
             padding: '8px 16px',
@@ -437,7 +467,7 @@ const Cover: Page = () => (
           className="es-fadeUp"
           style={{
             fontFamily: 'var(--osd-font-display)',
-            fontSize: 'var(--osd-size-hero)',
+            fontSize: size.hero,
             lineHeight: 0.98,
             fontWeight: 600,
             margin: 0,
@@ -463,7 +493,7 @@ const Cover: Page = () => (
           style={{
             marginTop: 48,
             maxWidth: 1100,
-            fontSize: 'var(--osd-size-body)',
+            fontSize: size.body,
             lineHeight: 1.35,
             color: palette.textSoft,
             animationDelay: '0.35s',
@@ -480,7 +510,7 @@ const Cover: Page = () => (
           display: 'flex',
           gap: 48,
           fontFamily: font.mono,
-          fontSize: 22,
+          fontSize: size.label,
           color: palette.muted,
         }}
       >
@@ -543,12 +573,12 @@ const Init: Page = () => {
         return (
           <>
             <span style={{ color: palette.mint }}>✔</span>{' '}
-            <span style={{ color: palette.text }}>{line.text}</span>
-            {line.dim && <span style={{ color: palette.muted }}> {line.dim}</span>}
+            <span style={{ color: palette.code }}>{line.text}</span>
+            {line.dim && <span style={{ color: palette.comment }}> {line.dim}</span>}
           </>
         );
       case 'bold':
-        return <span style={{ color: palette.text, fontWeight: 600 }}>{line.text}</span>;
+        return <span style={{ color: palette.code, fontWeight: 600 }}>{line.text}</span>;
       case 'cmd':
         return (
           <>
@@ -557,7 +587,7 @@ const Init: Page = () => {
           </>
         );
       case 'dim':
-        return <span style={{ color: palette.muted }}>{line.text}</span>;
+        return <span style={{ color: palette.comment }}>{line.text}</span>;
     }
   };
 
@@ -582,7 +612,7 @@ const Init: Page = () => {
               marginTop: 20,
               marginBottom: 0,
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 88,
+              fontSize: size.title,
               fontWeight: 600,
               letterSpacing: '-0.035em',
               lineHeight: 1.02,
@@ -593,8 +623,8 @@ const Init: Page = () => {
           <p
             style={{
               marginTop: 20,
-              fontSize: 28,
-              color: palette.textSoft,
+              fontSize: size.label,
+              color: palette.comment,
               letterSpacing: '-0.01em',
             }}
           >
@@ -609,7 +639,7 @@ const Init: Page = () => {
               flex: 1,
               padding: '32px 44px',
               fontFamily: font.mono,
-              fontSize: 24,
+              fontSize: size.code,
               lineHeight: 1.45,
               color: palette.textSoft,
               background: palette.surface,
@@ -618,7 +648,7 @@ const Init: Page = () => {
           >
             <div style={{ display: 'flex', gap: 16 }}>
               <span style={{ color: palette.mint }}>$</span>
-              <span className="gs-type" style={{ color: palette.text }}>
+              <span className="gs-type" style={{ color: palette.code }}>
                 npx @open-slide/cli init my-slide
               </span>
             </div>
@@ -679,7 +709,7 @@ const Prompt: Page = () => {
               marginTop: 20,
               marginBottom: 0,
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 88,
+              fontSize: size.title,
               fontWeight: 600,
               letterSpacing: '-0.035em',
               lineHeight: 1.02,
@@ -741,7 +771,7 @@ const Prompt: Page = () => {
                   display: 'flex',
                   gap: 16,
                   fontFamily: font.mono,
-                  fontSize: 26,
+                  fontSize: size.code,
                   color: palette.muted,
                 }}
               >
@@ -786,13 +816,13 @@ const Prompt: Page = () => {
                       padding: 8,
                       borderRadius: 10,
                       border: `1px solid ${i === 0 ? palette.accent : palette.border}`,
-                      background: i === 0 ? `${palette.accent}12` : palette.surface,
+                      background: i === 0 ? alpha(palette.accent, 7) : palette.surface,
                     }}
                   >
                     <span
                       style={{
                         fontFamily: font.mono,
-                        fontSize: 16,
+                        fontSize: size.small,
                         color: palette.muted,
                         width: 22,
                       }}
@@ -853,7 +883,7 @@ const Prompt: Page = () => {
                     height: '100%',
                     borderRadius: 14,
                     border: `1px solid ${palette.border}`,
-                    background: `radial-gradient(ellipse at 30% 30%, ${palette.accent2}22, transparent 60%), ${palette.bg}`,
+                    background: `radial-gradient(ellipse at 30% 30%, ${alpha(palette.accent2, 14)}, transparent 60%), ${palette.bg}`,
                     padding: 48,
                     display: 'flex',
                     flexDirection: 'column',
@@ -861,11 +891,11 @@ const Prompt: Page = () => {
                     boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.02)',
                   }}
                 >
-                  <Eyebrow style={{ fontSize: 14 }}>cover</Eyebrow>
+                  <Eyebrow style={{ fontSize: size.small }}>cover</Eyebrow>
                   <div>
                     <div
                       style={{
-                        fontSize: 64,
+                        fontSize: size.heading,
                         fontWeight: 600,
                         letterSpacing: '-0.035em',
                         lineHeight: 1.02,
@@ -876,7 +906,7 @@ const Prompt: Page = () => {
                     <div
                       style={{
                         marginTop: 16,
-                        fontSize: 22,
+                        fontSize: size.label,
                         color: palette.textSoft,
                         maxWidth: 560,
                       }}
@@ -889,7 +919,7 @@ const Prompt: Page = () => {
                       display: 'flex',
                       justifyContent: 'space-between',
                       fontFamily: font.mono,
-                      fontSize: 14,
+                      fontSize: size.small,
                       color: palette.muted,
                     }}
                   >
@@ -923,8 +953,8 @@ const VisualEdit: Page = () => {
           100%    { opacity: 1; transform: translateY(0); }
         }
         @keyframes ve-swatchPulse {
-          0%, 100% { box-shadow: 0 0 0 0 ${palette.accent}00; transform: scale(1); }
-          50%      { box-shadow: 0 0 0 6px ${palette.accent}33; transform: scale(1.06); }
+          0%, 100% { box-shadow: 0 0 0 0 ${alpha(palette.accent, 0)}; transform: scale(1); }
+          50%      { box-shadow: 0 0 0 6px ${alpha(palette.accent, 20)}; transform: scale(1.06); }
         }
         .ve-saveSwap  { animation: ve-saveSwap  3.6s ease forwards; }
         .ve-savedIn   { animation: ve-savedIn   3.6s ease forwards; }
@@ -947,7 +977,7 @@ const VisualEdit: Page = () => {
               marginTop: 20,
               marginBottom: 0,
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 88,
+              fontSize: size.title,
               fontWeight: 600,
               letterSpacing: '-0.035em',
               lineHeight: 1.02,
@@ -958,7 +988,7 @@ const VisualEdit: Page = () => {
           <p
             style={{
               marginTop: 20,
-              fontSize: 28,
+              fontSize: size.body,
               color: palette.textSoft,
               maxWidth: 1280,
             }}
@@ -979,11 +1009,11 @@ const VisualEdit: Page = () => {
                 alignItems: 'center',
                 gap: 8,
                 padding: '6px 14px',
-                background: `${palette.inspect}22`,
+                background: alpha(palette.inspect, 14),
                 border: `1px solid ${palette.inspect}`,
                 borderRadius: 8,
                 fontFamily: font.mono,
-                fontSize: 20,
+                fontSize: size.caption,
                 color: palette.inspect,
               }}
             >
@@ -1027,7 +1057,7 @@ const VisualEdit: Page = () => {
                   height: '100%',
                   borderRadius: 14,
                   border: `1px solid ${palette.border}`,
-                  background: `radial-gradient(ellipse at 30% 30%, ${palette.accent2}22, transparent 60%), ${palette.bg}`,
+                  background: `radial-gradient(ellipse at 30% 30%, ${alpha(palette.accent2, 14)}, transparent 60%), ${palette.bg}`,
                   padding: 56,
                   position: 'relative',
                   display: 'flex',
@@ -1035,7 +1065,7 @@ const VisualEdit: Page = () => {
                   justifyContent: 'center',
                 }}
               >
-                <Eyebrow style={{ fontSize: 14 }}>cover</Eyebrow>
+                <Eyebrow style={{ fontSize: size.small }}>cover</Eyebrow>
                 <div
                   style={{
                     position: 'relative',
@@ -1060,7 +1090,7 @@ const VisualEdit: Page = () => {
                     className="gs-morph"
                     style={{
                       animationDelay: '1.4s',
-                      fontSize: 88,
+                      fontSize: size.title,
                       fontWeight: 600,
                       letterSpacing: '-0.035em',
                       lineHeight: 1.02,
@@ -1074,7 +1104,7 @@ const VisualEdit: Page = () => {
                 <div
                   style={{
                     marginTop: 18,
-                    fontSize: 24,
+                    fontSize: size.code,
                     color: palette.textSoft,
                     maxWidth: 620,
                   }}
@@ -1145,12 +1175,12 @@ const VisualEdit: Page = () => {
                       gap: 10,
                       padding: '6px 6px 6px 16px',
                       borderRadius: 999,
-                      background: `${palette.surfaceHi}f0`,
+                      background: alpha(palette.surfaceHi, 94),
                       border: `1px solid ${palette.borderBright}`,
                       boxShadow: '0 24px 48px -16px rgba(0,0,0,0.6)',
                       backdropFilter: 'blur(8px)',
                       fontFamily: font.sans,
-                      fontSize: 18,
+                      fontSize: size.caption,
                       color: palette.text,
                       minHeight: 40,
                     }}
@@ -1167,7 +1197,7 @@ const VisualEdit: Page = () => {
                       <span
                         style={{
                           fontFamily: font.mono,
-                          fontSize: 15,
+                          fontSize: size.small,
                           color: palette.muted,
                           padding: '6px 12px',
                           borderRadius: 999,
@@ -1178,7 +1208,7 @@ const VisualEdit: Page = () => {
                       <span
                         style={{
                           fontFamily: font.sans,
-                          fontSize: 15,
+                          fontSize: size.small,
                           fontWeight: 500,
                           color: palette.text,
                           background: palette.accent,
@@ -1202,7 +1232,7 @@ const VisualEdit: Page = () => {
                         fontWeight: 500,
                       }}
                     >
-                      <span style={{ color: palette.mint, fontSize: 18 }}>✓</span>
+                      <span style={{ color: palette.mint, fontSize: size.caption }}>✓</span>
                       Saved
                     </span>
                   </div>
@@ -1228,7 +1258,7 @@ const VisualEdit: Page = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   fontFamily: font.mono,
-                  fontSize: 18,
+                  fontSize: size.caption,
                   color: palette.muted,
                 }}
               >
@@ -1246,7 +1276,7 @@ const VisualEdit: Page = () => {
                     borderRadius: 8,
                     padding: '12px 14px',
                     fontFamily: font.sans,
-                    fontSize: 18,
+                    fontSize: size.caption,
                     color: palette.text,
                     minHeight: 64,
                   }}
@@ -1337,7 +1367,7 @@ const VisualEdit: Page = () => {
                 <div
                   style={{
                     fontFamily: font.mono,
-                    fontSize: 15,
+                    fontSize: size.small,
                     color: palette.dim,
                   }}
                 >
@@ -1418,7 +1448,7 @@ const AssetsManager: Page = () => {
               marginTop: 20,
               marginBottom: 0,
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 88,
+              fontSize: size.title,
               fontWeight: 600,
               letterSpacing: '-0.035em',
               lineHeight: 1.02,
@@ -1429,7 +1459,7 @@ const AssetsManager: Page = () => {
           <p
             style={{
               marginTop: 20,
-              fontSize: 28,
+              fontSize: size.body,
               color: palette.textSoft,
               maxWidth: 1280,
             }}
@@ -1479,7 +1509,7 @@ const AssetsManager: Page = () => {
                     left: 'calc(50% + 0px)',
                     width: 'calc(50% - 4px)',
                     bottom: 4,
-                    background: `${palette.accent}22`,
+                    background: alpha(palette.accent, 14),
                     border: `1px solid ${palette.accent}`,
                     borderRadius: 999,
                     transition: 'left 200ms ease',
@@ -1490,7 +1520,7 @@ const AssetsManager: Page = () => {
                     position: 'relative',
                     padding: '8px 22px',
                     fontFamily: font.mono,
-                    fontSize: 18,
+                    fontSize: size.caption,
                     color: palette.muted,
                   }}
                 >
@@ -1501,7 +1531,7 @@ const AssetsManager: Page = () => {
                     position: 'relative',
                     padding: '8px 22px',
                     fontFamily: font.mono,
-                    fontSize: 18,
+                    fontSize: size.caption,
                     color: palette.accentSoft,
                   }}
                 >
@@ -1518,7 +1548,7 @@ const AssetsManager: Page = () => {
                   border: `1px solid ${palette.borderBright}`,
                   borderRadius: 10,
                   fontFamily: font.sans,
-                  fontSize: 18,
+                  fontSize: size.caption,
                   color: palette.text,
                 }}
               >
@@ -1568,7 +1598,7 @@ const AssetsManager: Page = () => {
                 inset: 12,
                 pointerEvents: 'none',
                 borderRadius: 14,
-                background: `${palette.bg}26`,
+                background: alpha(palette.bg, 15),
               }}
             />
             <div
@@ -1588,12 +1618,12 @@ const AssetsManager: Page = () => {
                   gap: 10,
                   padding: '10px 20px',
                   borderRadius: 999,
-                  background: `${palette.surfaceHi}f0`,
+                  background: alpha(palette.surfaceHi, 94),
                   border: `1px solid ${palette.borderBright}`,
                   boxShadow: '0 18px 36px -12px rgba(0,0,0,0.5)',
                   backdropFilter: 'blur(8px)',
                   fontFamily: font.sans,
-                  fontSize: 18,
+                  fontSize: size.caption,
                   color: palette.textSoft,
                 }}
               >
@@ -1624,7 +1654,7 @@ const AssetsManager: Page = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   fontFamily: font.mono,
-                  fontSize: 15,
+                  fontSize: size.small,
                   color: palette.muted,
                   marginBottom: 10,
                 }}
@@ -1642,7 +1672,7 @@ const AssetsManager: Page = () => {
                   borderRadius: 8,
                   padding: '10px 12px',
                   fontFamily: font.mono,
-                  fontSize: 17,
+                  fontSize: size.caption,
                   color: palette.text,
                   marginBottom: 14,
                 }}
@@ -1689,7 +1719,7 @@ const AssetsManager: Page = () => {
                     <div
                       style={{
                         fontFamily: font.mono,
-                        fontSize: 13,
+                        fontSize: size.small,
                         color: palette.textSoft,
                       }}
                     >
@@ -1713,7 +1743,7 @@ const PanelSection = ({ title, children }: { title: string; children: React.Reac
       style={{
         marginBottom: 12,
         fontFamily: font.mono,
-        fontSize: 12,
+        fontSize: size.small,
         letterSpacing: '0.08em',
         textTransform: 'uppercase',
         color: palette.muted,
@@ -1739,7 +1769,7 @@ const PanelRow = ({ label, children }: { label: string; children: React.ReactNod
     <span
       style={{
         fontFamily: font.sans,
-        fontSize: 14,
+        fontSize: size.small,
         color: palette.muted,
       }}
     >
@@ -1758,7 +1788,7 @@ const PanelInput = ({ value, dim = false }: { value: string; dim?: boolean }) =>
       borderRadius: 6,
       padding: '6px 10px',
       fontFamily: font.mono,
-      fontSize: 14,
+      fontSize: size.small,
       color: dim ? palette.dim : palette.text,
       minHeight: 28,
     }}
@@ -1779,13 +1809,13 @@ const PanelSelect = ({ value }: { value: string }) => (
       borderRadius: 6,
       padding: '6px 10px',
       fontFamily: font.sans,
-      fontSize: 14,
+      fontSize: size.small,
       color: palette.text,
       minHeight: 28,
     }}
   >
     <span>{value}</span>
-    <span style={{ color: palette.muted, fontSize: 12 }}>▾</span>
+    <span style={{ color: palette.muted, fontSize: size.small }}>▾</span>
   </div>
 );
 
@@ -1815,7 +1845,7 @@ const AssetCardMock = ({
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
-      boxShadow: accent ? `0 0 0 3px ${palette.accent}22` : 'none',
+      boxShadow: accent ? `0 0 0 3px ${alpha(palette.accent, 14)}` : 'none',
     }}
   >
     <div
@@ -1840,7 +1870,7 @@ const AssetCardMock = ({
       <div
         style={{
           fontFamily: font.sans,
-          fontSize: 16,
+          fontSize: size.small,
           color: palette.text,
           letterSpacing: '-0.005em',
           whiteSpace: 'nowrap',
@@ -1853,7 +1883,7 @@ const AssetCardMock = ({
       <div
         style={{
           fontFamily: font.mono,
-          fontSize: 12,
+          fontSize: size.small,
           color: palette.muted,
           marginTop: 2,
         }}
@@ -1886,7 +1916,7 @@ const Inspect: Page = () => (
             marginTop: 20,
             marginBottom: 0,
             fontFamily: 'var(--osd-font-display)',
-            fontSize: 88,
+            fontSize: size.title,
             fontWeight: 600,
             letterSpacing: '-0.035em',
             lineHeight: 1.02,
@@ -1897,7 +1927,7 @@ const Inspect: Page = () => (
         <p
           style={{
             marginTop: 20,
-            fontSize: 28,
+            fontSize: size.body,
             color: palette.textSoft,
           }}
         >
@@ -1917,11 +1947,11 @@ const Inspect: Page = () => (
               alignItems: 'center',
               gap: 8,
               padding: '6px 14px',
-              background: `${palette.inspect}22`,
+              background: alpha(palette.inspect, 14),
               border: `1px solid ${palette.inspect}`,
               borderRadius: 8,
               fontFamily: font.mono,
-              fontSize: 20,
+              fontSize: size.caption,
               color: palette.inspect,
             }}
           >
@@ -1966,7 +1996,7 @@ const Inspect: Page = () => (
                   height: 80,
                   borderRadius: 8,
                   border: `1px solid ${i === 0 ? palette.accent : palette.border}`,
-                  background: i === 0 ? `${palette.accent}10` : palette.surface,
+                  background: i === 0 ? alpha(palette.accent, 6) : palette.surface,
                 }}
               />
             ))}
@@ -1989,7 +2019,7 @@ const Inspect: Page = () => (
                 height: '100%',
                 borderRadius: 14,
                 border: `1px solid ${palette.border}`,
-                background: `radial-gradient(ellipse at 30% 30%, ${palette.accent2}22, transparent 60%), ${palette.bg}`,
+                background: `radial-gradient(ellipse at 30% 30%, ${alpha(palette.accent2, 14)}, transparent 60%), ${palette.bg}`,
                 padding: 56,
                 position: 'relative',
                 display: 'flex',
@@ -1997,7 +2027,7 @@ const Inspect: Page = () => (
                 justifyContent: 'center',
               }}
             >
-              <Eyebrow style={{ fontSize: 14 }}>cover</Eyebrow>
+              <Eyebrow style={{ fontSize: size.small }}>cover</Eyebrow>
               <div
                 style={{
                   position: 'relative',
@@ -2020,7 +2050,7 @@ const Inspect: Page = () => (
                 />
                 <div
                   style={{
-                    fontSize: 72,
+                    fontSize: size.heading,
                     fontWeight: 600,
                     letterSpacing: '-0.035em',
                     lineHeight: 1.02,
@@ -2034,7 +2064,7 @@ const Inspect: Page = () => (
               <div
                 style={{
                   marginTop: 18,
-                  fontSize: 24,
+                  fontSize: size.code,
                   color: palette.textSoft,
                   maxWidth: 620,
                 }}
@@ -2107,7 +2137,7 @@ const Inspect: Page = () => (
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     fontFamily: font.mono,
-                    fontSize: 15,
+                    fontSize: size.small,
                     color: palette.muted,
                     marginBottom: 12,
                   }}
@@ -2121,7 +2151,7 @@ const Inspect: Page = () => (
                     border: `1px solid ${palette.border}`,
                     borderRadius: 8,
                     padding: '14px 14px',
-                    fontSize: 20,
+                    fontSize: size.caption,
                     color: palette.text,
                     minHeight: 78,
                     lineHeight: 1.4,
@@ -2136,7 +2166,7 @@ const Inspect: Page = () => (
                   style={{
                     marginTop: 12,
                     fontFamily: font.mono,
-                    fontSize: 13,
+                    fontSize: size.small,
                     color: palette.muted,
                     textAlign: 'right',
                   }}
@@ -2174,7 +2204,7 @@ const Apply: Page = () => (
             marginTop: 20,
             marginBottom: 0,
             fontFamily: 'var(--osd-font-display)',
-            fontSize: 88,
+            fontSize: size.title,
             fontWeight: 600,
             letterSpacing: '-0.035em',
             lineHeight: 1.02,
@@ -2225,7 +2255,7 @@ const Apply: Page = () => (
                 borderRadius: 10,
                 padding: '18px 22px',
                 fontFamily: font.mono,
-                fontSize: 18,
+                fontSize: size.caption,
                 lineHeight: 1.55,
                 color: palette.textSoft,
                 overflow: 'hidden',
@@ -2299,20 +2329,20 @@ const Apply: Page = () => (
                 flex: 1,
                 borderRadius: 14,
                 border: `1px solid ${palette.border}`,
-                background: `radial-gradient(ellipse at 30% 30%, ${palette.accent2}22, transparent 60%), ${palette.bg}`,
+                background: `radial-gradient(ellipse at 30% 30%, ${alpha(palette.accent2, 14)}, transparent 60%), ${palette.bg}`,
                 padding: 56,
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
               }}
             >
-              <Eyebrow style={{ fontSize: 14 }}>cover</Eyebrow>
+              <Eyebrow style={{ fontSize: size.small }}>cover</Eyebrow>
               <div
                 className="gs-morph"
                 style={{
                   animationDelay: '3.2s',
                   marginTop: 20,
-                  fontSize: 84,
+                  fontSize: size.heading,
                   fontWeight: 600,
                   letterSpacing: '-0.035em',
                   lineHeight: 1.02,
@@ -2324,7 +2354,7 @@ const Apply: Page = () => (
               <div
                 style={{
                   marginTop: 18,
-                  fontSize: 24,
+                  fontSize: size.code,
                   color: palette.textSoft,
                   maxWidth: 620,
                 }}
@@ -2341,11 +2371,11 @@ const Apply: Page = () => (
                   gap: 10,
                   padding: '6px 12px',
                   borderRadius: 999,
-                  background: `${palette.mint}18`,
-                  border: `1px solid ${palette.mint}55`,
+                  background: alpha(palette.mint, 9),
+                  border: `1px solid ${alpha(palette.mint, 35)}`,
                   color: palette.mint,
                   fontFamily: font.mono,
-                  fontSize: 16,
+                  fontSize: size.small,
                   width: 'fit-content',
                 }}
               >
@@ -2373,30 +2403,30 @@ const Themes: Page = () => {
     {
       id: 'editorial-noir',
       mode: 'dark · serif',
-      bg: '#0b0d10',
-      text: '#f4ecdc',
-      accent: '#d6a64b',
-      muted: '#7a7468',
-      titleFont: "'Georgia', 'Source Serif Pro', serif",
+      bg: palette.surface,
+      text: palette.text,
+      accent: palette.accent,
+      muted: palette.comment,
+      titleFont: font.display,
       sample: 'A quiet year.',
     },
     {
       id: 'paper-press',
       mode: 'light · serif',
-      bg: '#f6f1e7',
-      text: '#141210',
-      accent: '#c43a1d',
-      muted: '#8a8276',
-      titleFont: "'Times New Roman', serif",
+      bg: palette.surfaceHi,
+      text: palette.text,
+      accent: palette.accentSoft,
+      muted: palette.muted,
+      titleFont: font.display,
       sample: 'Field notes.',
     },
     {
       id: 'neon-terminal',
       mode: 'dark · mono',
-      bg: '#05070a',
-      text: '#e6edf3',
-      accent: '#39ff88',
-      muted: '#4a5560',
+      bg: palette.bg,
+      text: palette.code,
+      accent: palette.mint,
+      muted: palette.comment,
       titleFont: font.mono,
       sample: '$ boot.',
     },
@@ -2421,7 +2451,7 @@ const Themes: Page = () => {
         <div className="es-fadeUp" style={{ animationDelay: '0.15s' }}>
           <h2
             style={{
-              fontSize: 132,
+              fontSize: size.hero,
               fontWeight: 600,
               letterSpacing: '-0.04em',
               lineHeight: 0.98,
@@ -2444,7 +2474,7 @@ const Themes: Page = () => {
           <p
             style={{
               marginTop: 28,
-              fontSize: 28,
+              fontSize: size.label,
               lineHeight: 1.45,
               color: palette.textSoft,
               maxWidth: 1380,
@@ -2491,7 +2521,7 @@ const Themes: Page = () => {
                   justifyContent: 'space-between',
                   alignItems: 'baseline',
                   fontFamily: font.mono,
-                  fontSize: 18,
+                  fontSize: size.caption,
                   letterSpacing: '0.12em',
                   textTransform: 'uppercase',
                 }}
@@ -2503,7 +2533,7 @@ const Themes: Page = () => {
               <div
                 style={{
                   fontFamily: t.titleFont,
-                  fontSize: 64,
+                  fontSize: size.heading,
                   fontWeight: 700,
                   lineHeight: 1.04,
                   color: t.text,
@@ -2541,7 +2571,7 @@ const Themes: Page = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             fontFamily: font.mono,
-            fontSize: 22,
+            fontSize: size.label,
             color: palette.muted,
           }}
         >
@@ -2585,7 +2615,7 @@ const Recap: Page = () => {
           <h2
             style={{
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 160,
+              fontSize: size.hero,
               fontWeight: 600,
               letterSpacing: '-0.045em',
               lineHeight: 0.98,
@@ -2632,7 +2662,7 @@ const Recap: Page = () => {
               <div
                 style={{
                   fontFamily: font.mono,
-                  fontSize: 20,
+                  fontSize: size.caption,
                   color: palette.accentSoft,
                   letterSpacing: '0.12em',
                 }}
@@ -2641,7 +2671,7 @@ const Recap: Page = () => {
               </div>
               <div
                 style={{
-                  fontSize: 40,
+                  fontSize: size.body,
                   fontWeight: 600,
                   letterSpacing: '-0.03em',
                 }}
@@ -2651,7 +2681,7 @@ const Recap: Page = () => {
               <div
                 style={{
                   fontFamily: font.mono,
-                  fontSize: 18,
+                  fontSize: size.caption,
                   color: palette.muted,
                 }}
               >
@@ -2669,7 +2699,7 @@ const Recap: Page = () => {
             justifyContent: 'space-between',
             alignItems: 'center',
             fontFamily: font.mono,
-            fontSize: 22,
+            fontSize: size.label,
             color: palette.muted,
           }}
         >
@@ -2713,7 +2743,7 @@ const AgentAgnostic: Page = () => {
               marginTop: 24,
               marginBottom: 0,
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 120,
+              fontSize: size.section,
               fontWeight: 600,
               letterSpacing: '-0.04em',
               lineHeight: 1.0,
@@ -2735,7 +2765,7 @@ const AgentAgnostic: Page = () => {
             style={{
               marginTop: 28,
               maxWidth: 1280,
-              fontSize: 32,
+              fontSize: size.body,
               lineHeight: 1.4,
               color: palette.textSoft,
               letterSpacing: '-0.01em',
@@ -2770,7 +2800,7 @@ const AgentAgnostic: Page = () => {
           style={{
             animationDelay: '0.8s',
             fontFamily: font.mono,
-            fontSize: 22,
+            fontSize: size.caption,
             color: palette.muted,
             textAlign: 'center',
           }}
@@ -2792,7 +2822,7 @@ const FreeLayout: Page = () => {
       height: '100%',
       borderRadius: 12,
       border: `1px solid ${palette.border}`,
-      background: `radial-gradient(ellipse at 30% 30%, ${palette.accent2}1f, transparent 60%), ${palette.bg}`,
+      background: `radial-gradient(ellipse at 30% 30%, ${alpha(palette.accent2, 12)}, transparent 60%), ${palette.bg}`,
       padding: 26,
       display: 'flex',
       overflow: 'hidden',
@@ -2803,7 +2833,7 @@ const FreeLayout: Page = () => {
         <div style={{ ...base, flexDirection: 'column', justifyContent: 'center' }}>
           <div
             style={{
-              fontSize: 44,
+              fontSize: size.body,
               fontWeight: 600,
               letterSpacing: '-0.03em',
               lineHeight: 1,
@@ -2846,7 +2876,7 @@ const FreeLayout: Page = () => {
           <div
             style={{
               flex: 1,
-              background: `linear-gradient(135deg, ${palette.accent}55, ${palette.accent2}33)`,
+              background: `linear-gradient(135deg, ${alpha(palette.accent, 35)}, ${alpha(palette.accent2, 20)})`,
             }}
           />
         </div>
@@ -2858,7 +2888,7 @@ const FreeLayout: Page = () => {
           style={{
             ...base,
             padding: 0,
-            background: `linear-gradient(160deg, ${palette.accentSoft}55, ${palette.accent2}33 40%, ${palette.bg} 100%)`,
+            background: `linear-gradient(160deg, ${alpha(palette.accentSoft, 35)}, ${alpha(palette.accent2, 20)} 40%, ${palette.bg} 100%)`,
           }}
         >
           <div
@@ -2911,7 +2941,7 @@ const FreeLayout: Page = () => {
               key={i}
               style={{
                 borderRadius: 4,
-                background: i % 4 === 0 ? `${palette.accent}44` : palette.surfaceMax,
+                background: i % 4 === 0 ? alpha(palette.accent, 27) : palette.surfaceMax,
                 border: `1px solid ${palette.border}`,
               }}
             />
@@ -2933,7 +2963,7 @@ const FreeLayout: Page = () => {
         >
           <div
             style={{
-              fontSize: 40,
+              fontSize: size.body,
               color: palette.muted,
               lineHeight: 1,
               marginBottom: 6,
@@ -2944,7 +2974,7 @@ const FreeLayout: Page = () => {
           </div>
           <div
             style={{
-              fontSize: 22,
+              fontSize: size.label,
               fontWeight: 500,
               letterSpacing: '-0.02em',
               lineHeight: 1.2,
@@ -2974,7 +3004,7 @@ const FreeLayout: Page = () => {
               key={i}
               style={{
                 fontFamily: font.mono,
-                fontSize: 18,
+                fontSize: size.caption,
                 color: i === 0 ? palette.accentSoft : palette.textSoft,
                 letterSpacing: '-0.01em',
               }}
@@ -3017,7 +3047,7 @@ const FreeLayout: Page = () => {
               marginTop: 24,
               marginBottom: 0,
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 120,
+              fontSize: size.section,
               fontWeight: 600,
               letterSpacing: '-0.04em',
               lineHeight: 1.0,
@@ -3039,7 +3069,7 @@ const FreeLayout: Page = () => {
             style={{
               marginTop: 28,
               maxWidth: 1280,
-              fontSize: 32,
+              fontSize: size.body,
               lineHeight: 1.4,
               color: palette.textSoft,
               letterSpacing: '-0.01em',
@@ -3118,7 +3148,7 @@ const GitTracked: Page = () => {
               marginTop: 20,
               marginBottom: 0,
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 104,
+              fontSize: size.section,
               fontWeight: 600,
               letterSpacing: '-0.04em',
               lineHeight: 1.0,
@@ -3139,7 +3169,7 @@ const GitTracked: Page = () => {
           <p
             style={{
               marginTop: 20,
-              fontSize: 28,
+              fontSize: size.label,
               color: palette.textSoft,
               maxWidth: 1280,
               letterSpacing: '-0.01em',
@@ -3166,7 +3196,7 @@ const GitTracked: Page = () => {
                 background: palette.surface,
                 padding: '32px 40px',
                 fontFamily: font.mono,
-                fontSize: 22,
+                fontSize: size.label,
                 lineHeight: 1.65,
                 color: palette.textSoft,
                 overflow: 'hidden',
@@ -3252,7 +3282,7 @@ const GitTracked: Page = () => {
                   <span
                     style={{
                       fontFamily: font.mono,
-                      fontSize: 28,
+                      fontSize: size.label,
                       color: palette.text,
                       letterSpacing: '-0.01em',
                     }}
@@ -3263,7 +3293,7 @@ const GitTracked: Page = () => {
                 <div
                   style={{
                     paddingLeft: 24,
-                    fontSize: 22,
+                    fontSize: size.label,
                     color: palette.muted,
                   }}
                 >
@@ -3306,7 +3336,7 @@ const DeployAnywhere: Page = () => {
               marginTop: 24,
               marginBottom: 0,
               fontFamily: 'var(--osd-font-display)',
-              fontSize: 104,
+              fontSize: size.section,
               fontWeight: 600,
               letterSpacing: '-0.04em',
               lineHeight: 1.0,
@@ -3328,7 +3358,7 @@ const DeployAnywhere: Page = () => {
             style={{
               marginTop: 24,
               maxWidth: 1280,
-              fontSize: 32,
+              fontSize: size.body,
               lineHeight: 1.4,
               color: palette.textSoft,
               letterSpacing: '-0.01em',
@@ -3368,7 +3398,7 @@ const DeployAnywhere: Page = () => {
             border: `1px solid ${palette.border}`,
             background: palette.surface,
             fontFamily: font.mono,
-            fontSize: 26,
+            fontSize: size.code,
             color: palette.textSoft,
             display: 'flex',
             gap: 16,

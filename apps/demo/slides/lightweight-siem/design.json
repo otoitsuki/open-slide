@@ -1,0 +1,29 @@
+{
+  "palette": {
+    "bg": "#212121",
+    "text": "#e6e6e6",
+    "accent": "#a8a8ff",
+    "accent2": "#5e6ad2",
+    "surface": "#363636",
+    "surfaceAlt": "#1a1c21",
+    "muted": "#6f727c",
+    "border": "#2a2d35",
+    "code": "#f7f8f8",
+    "comment": "#6f727c"
+  },
+  "fonts": {
+    "display": "-apple-system, BlinkMacSystemFont, \"Inter\", system-ui, sans-serif",
+    "body": "-apple-system, BlinkMacSystemFont, \"Inter\", system-ui, sans-serif",
+    "mono": "-apple-system, BlinkMacSystemFont, \"Inter\", system-ui, sans-serif"
+  },
+  "typeScale": {
+    "hero": 88,
+    "heading": 88,
+    "body": 48,
+    "code": 24,
+    "label": 19,
+    "chartLabel": 28,
+    "caption": 18
+  },
+  "radius": 16
+}

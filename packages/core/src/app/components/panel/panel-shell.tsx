@@ -63,12 +63,12 @@ export function PanelShell({
         transitionDuration: `${PANEL_TRANSITION_MS}ms`,
       }}
     >
-      <div style={{ width: PANEL_W }} className="flex h-full shrink-0 flex-col">
+      <div style={{ width: PANEL_W }} className="flex h-full min-h-0 shrink-0 flex-col">
         <header className="flex h-9 shrink-0 items-center justify-between gap-2 border-b border-hairline px-3">
           {header}
         </header>
         {banner}
-        <ScrollArea className="flex flex-1 flex-col">
+        <ScrollArea className="min-h-0 flex-1 overflow-hidden">
           <div className="flex min-h-full flex-col">{children}</div>
         </ScrollArea>
         {footer && <div className="shrink-0 border-t border-hairline">{footer}</div>}
