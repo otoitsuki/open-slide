@@ -49,7 +49,7 @@ function resolved(id: string): string {
 async function findSlides(userCwd: string, slidesDir: string): Promise<string[]> {
   const abs = path.resolve(userCwd, slidesDir);
   if (!existsSync(abs)) return [];
-  const hits = await fg('*/index.{tsx,jsx,ts,js}', {
+  const hits = await fg('*/index.{tsx,jsx,ts,js,md}', {
     cwd: abs,
     absolute: true,
     onlyFiles: true,
@@ -63,18 +63,43 @@ function toId(absFile: string, slidesRoot: string): string {
 }
 
 function generateSlidesModule(files: string[], slidesRoot: string, isDev: boolean): string {
-  const entries = files.map((abs) => {
+  const entries = files.map((abs, index) => {
     const id = toId(abs, slidesRoot);
     const importPath = isDev ? `/@fs${abs}` : abs;
-    return { id, importPath };
+    const isMarkdown = abs.endsWith('.md');
+    const designPath = path.join(path.dirname(abs), 'design.json');
+    const hasDesign = isMarkdown && existsSync(designPath);
+    const assetBase = isDev
+      ? `/@fs${path.dirname(abs)}/`
+      : `/${path.relative(slidesRoot, path.dirname(abs)).split(path.sep).join('/')}/`;
+    return { id, importPath, isMarkdown, designPath, hasDesign, assetBase, index };
   });
 
   const ids = JSON.stringify(entries.map((e) => e.id).sort());
+  const markdownImports = entries
+    .filter((e) => e.isMarkdown)
+    .map((e) => {
+      const rawImport = `import md${e.index} from ${JSON.stringify(`${e.importPath}?raw`)};`;
+      const designImport = e.hasDesign
+        ? `\nimport design${e.index} from ${JSON.stringify(`${isDev ? `/@fs${e.designPath}` : e.designPath}?raw`)};`
+        : '';
+      return `${rawImport}${designImport}`;
+    })
+    .join('\n');
   const cases = entries
-    .map((e) => `    case ${JSON.stringify(e.id)}: return import(${JSON.stringify(e.importPath)});`)
+    .map((e) => {
+      if (!e.isMarkdown) {
+        return `    case ${JSON.stringify(e.id)}: return import(${JSON.stringify(e.importPath)});`;
+      }
+      const designExpr = e.hasDesign ? `JSON.parse(design${e.index})` : 'undefined';
+      return `    case ${JSON.stringify(e.id)}: return Promise.resolve(markdownToSlideModule(md${e.index}, { id: ${JSON.stringify(e.id)}, design: ${designExpr}, assetBase: ${JSON.stringify(e.assetBase)} }));`;
+    })
     .join('\n');
 
   return `// virtual:open-slide/slides — generated
+import { markdownToSlideModule } from '@/lib/markdown-slide';
+${markdownImports}
+
 export const slideIds = ${ids};
 
 export async function loadSlide(id) {
@@ -137,7 +162,7 @@ export function openSlidePlugin(opts: OpenSlidePluginOptions): Plugin {
         if (rel.startsWith('..') || path.isAbsolute(rel)) return false;
         const parts = rel.split(path.sep);
         if (parts.length !== 2) return false;
-        return /^index\.(tsx|jsx|ts|js)$/.test(parts[1]);
+        return /^index\.(tsx|jsx|ts|js|md)$/.test(parts[1]);
       };
 
       let reloadTimer: ReturnType<typeof setTimeout> | null = null;
@@ -150,7 +175,7 @@ export function openSlidePlugin(opts: OpenSlidePluginOptions): Plugin {
           server.ws.send({ type: 'full-reload' });
         }, 150);
       };
-      server.watcher.add(path.join(slidesRoot, '*/index.{tsx,jsx,ts,js}'));
+      server.watcher.add(path.join(slidesRoot, '*/index.{tsx,jsx,ts,js,md}'));
       server.watcher.on('add', (p) => {
         if (isSlideEntry(p)) reload();
       });

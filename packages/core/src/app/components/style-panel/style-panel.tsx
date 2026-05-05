@@ -108,6 +108,69 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
             }, 'design:palette.accent')
           }
         />
+        <ColorField
+          label="Accent secondary"
+          value={draft.palette.accent2}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.accent2 = v;
+            }, 'design:palette.accent2')
+          }
+        />
+        <ColorField
+          label="Surface"
+          value={draft.palette.surface}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.surface = v;
+            }, 'design:palette.surface')
+          }
+        />
+        <ColorField
+          label="Surface alt"
+          value={draft.palette.surfaceAlt}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.surfaceAlt = v;
+            }, 'design:palette.surfaceAlt')
+          }
+        />
+        <ColorField
+          label="Muted text"
+          value={draft.palette.muted}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.muted = v;
+            }, 'design:palette.muted')
+          }
+        />
+        <ColorField
+          label="Border"
+          value={draft.palette.border}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.border = v;
+            }, 'design:palette.border')
+          }
+        />
+        <ColorField
+          label="Code text"
+          value={draft.palette.code}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.code = v;
+            }, 'design:palette.code')
+          }
+        />
+        <ColorField
+          label="Comment text"
+          value={draft.palette.comment}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.comment = v;
+            }, 'design:palette.comment')
+          }
+        />
       </Section>
 
       <Separator />
@@ -131,6 +194,15 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
             }, 'design:fonts.body')
           }
         />
+        <FontField
+          label="Mono font"
+          value={draft.fonts.mono}
+          onChange={(v) =>
+            update((d) => {
+              d.fonts.mono = v;
+            }, 'design:fonts.mono')
+          }
+        />
         <SliderField
           label={t.stylePanel.heroLabel}
           value={draft.typeScale.hero}
@@ -145,6 +217,19 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <SliderField
+          label="Heading"
+          value={draft.typeScale.heading}
+          min={32}
+          max={140}
+          step={2}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.heading = n;
+            }, 'design:typeScale.heading')
+          }
+        />
+        <SliderField
           label={t.stylePanel.bodyLabel}
           value={draft.typeScale.body}
           min={16}
@@ -155,6 +240,58 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
             update((d) => {
               d.typeScale.body = n;
             }, 'design:typeScale.body')
+          }
+        />
+        <SliderField
+          label="Code"
+          value={draft.typeScale.code}
+          min={12}
+          max={48}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.code = n;
+            }, 'design:typeScale.code')
+          }
+        />
+        <SliderField
+          label="Label"
+          value={draft.typeScale.label}
+          min={10}
+          max={40}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.label = n;
+            }, 'design:typeScale.label')
+          }
+        />
+        <SliderField
+          label="Chart label"
+          value={draft.typeScale.chartLabel}
+          min={12}
+          max={56}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.chartLabel = n;
+            }, 'design:typeScale.chartLabel')
+          }
+        />
+        <SliderField
+          label="Caption"
+          value={draft.typeScale.caption}
+          min={10}
+          max={32}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.caption = n;
+            }, 'design:typeScale.caption')
           }
         />
       </Section>

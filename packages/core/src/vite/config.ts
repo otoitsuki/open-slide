@@ -43,7 +43,7 @@ export async function createViteConfig(opts: CreateViteConfigOptions): Promise<I
       react(),
       tailwindcss(),
       openSlidePlugin({ userCwd, config }),
-      designPlugin({ userCwd }),
+      designPlugin({ userCwd, slidesDir }),
       commentsPlugin({ userCwd, slidesDir }),
       filesPlugin({ userCwd, slidesDir }),
     ],
