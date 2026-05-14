@@ -1,5 +1,13 @@
 # @open-slide/cli
 
+## 1.2.1
+
+### Patch Changes
+
+- [`58a85bf`](https://github.com/1weiho/open-slide/commit/58a85bfa94e6fa55b275267a8333c9f78713c56b) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Add build-slide-from-markdown skill for path-based markdown decks with mergeDesign tokens; extend markdown-slide-deck frontmatter.
+
+- [`58a85bf`](https://github.com/1weiho/open-slide/commit/58a85bfa94e6fa55b275267a8333c9f78713c56b) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Add markdown-slide-deck skill, Slidev markdown path for create-slide, and scaffold template.md for CLI sync.
+
 ## 1.2.0
 
 ### Minor Changes

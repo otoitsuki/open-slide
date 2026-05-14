@@ -1,5 +1,33 @@
 # @open-slide/core
 
+## 1.4.0
+
+### Minor Changes
+
+- [`58a85bf`](https://github.com/1weiho/open-slide/commit/58a85bfa94e6fa55b275267a8333c9f78713c56b) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Collapse heading 2 and 3 into a single heading token; `--osd-size-heading-{2,3}` mirror `--osd-size-heading-1`.
+
+### Patch Changes
+
+- [`58a85bf`](https://github.com/1weiho/open-slide/commit/58a85bfa94e6fa55b275267a8333c9f78713c56b) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Add build-slide-from-markdown skill for path-based markdown decks with mergeDesign tokens; extend markdown-slide-deck frontmatter.
+
+- [`58a85bf`](https://github.com/1weiho/open-slide/commit/58a85bfa94e6fa55b275267a8333c9f78713c56b) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Merge slide design with defaultDesign everywhere the canvas renders or exports so all osd tokens resolve without an explicit export.
+
+- [`25b9634`](https://github.com/1weiho/open-slide/commit/25b96342e2fcca21a7e9e24f520465f8b4071942) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Design panel saves prefer `mergeDesign` exports, drop a duplicate legacy `const design`, and parse the merged patch so token edits do not reintroduce a second binding.
+
+- [`58a85bf`](https://github.com/1weiho/open-slide/commit/58a85bfa94e6fa55b275267a8333c9f78713c56b) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Fix side panel scroll so long Design Token and Inspector forms stay reachable.
+
+- [#110](https://github.com/1weiho/open-slide/pull/110) [`5a39c31`](https://github.com/1weiho/open-slide/commit/5a39c319f85dff046f9cba67011d314fc5343b89) Thanks [@1weiho](https://github.com/1weiho)! - Fix type errors across inspector, player, slide route, and comments plugin.
+
+- [#115](https://github.com/1weiho/open-slide/pull/115) [`5bc45b7`](https://github.com/1weiho/open-slide/commit/5bc45b7e544958615e4706a6f880f4a56515d21f) Thanks [@1weiho](https://github.com/1weiho)! - Prevent inspector content textarea from expanding the panel width when typing long unbroken lines.
+
+- [`58a85bf`](https://github.com/1weiho/open-slide/commit/58a85bfa94e6fa55b275267a8333c9f78713c56b) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Add markdown-slide-deck skill, Slidev markdown path for create-slide, and scaffold template.md for CLI sync.
+
+- [#103](https://github.com/1weiho/open-slide/pull/103) [`c7b8f6a`](https://github.com/1weiho/open-slide/commit/c7b8f6a435ed5d27d7e3ab9f8e99b5badcd36515) Thanks [@chentyke](https://github.com/chentyke)! - Support styling selected text ranges in inspector content fields.
+
+- [#111](https://github.com/1weiho/open-slide/pull/111) [`35158dd`](https://github.com/1weiho/open-slide/commit/35158dd37214978e60775487954168d6cfaf5d4a) Thanks [@1weiho](https://github.com/1weiho)! - Pare back the agent-connected and agent-watching tooltips to a single status line.
+
+- [`58a85bf`](https://github.com/1weiho/open-slide/commit/58a85bfa94e6fa55b275267a8333c9f78713c56b) Thanks [@otoitsuki](https://github.com/otoitsuki)! - Explain in slide-authoring skill that SVG `<text>` font tokens must use inline `style` so chart-label and small vars resolve.
+
 ## 1.3.0
 
 ### Minor Changes
