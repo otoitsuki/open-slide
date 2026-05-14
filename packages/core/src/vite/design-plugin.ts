@@ -76,6 +76,12 @@ type DesignDeclLocation = {
   objectEnd: number;
 };
 
+type DesignDeclInfo = DesignDeclLocation & {
+  kind: 'merge' | 'object';
+  exported: boolean;
+  objectNode: AstNode;
+};
+
 function unwrapTypeAssertion(node: AstNode): AstNode {
   if (node.type === 'TSSatisfiesExpression' || node.type === 'TSAsExpression') {
     const expr = (node as unknown as { expression?: AstNode }).expression;
@@ -93,15 +99,20 @@ function extractMergeDesignPatchNode(callNode: AstNode): AstNode | null {
   return patch.type === 'ObjectExpression' ? patch : null;
 }
 
-function findDesignDecl(ast: AstNode): DesignDeclLocation | null {
+function enumerateDesignDeclarations(ast: AstNode): DesignDeclInfo[] {
   const body = (ast as unknown as { program?: { body?: AstNode[] } }).program?.body ?? [];
+  const out: DesignDeclInfo[] = [];
   for (const node of body) {
     let varDecl: AstNode | null = null;
+    let exported = false;
     if (node.type === 'VariableDeclaration') {
       varDecl = node;
     } else if (node.type === 'ExportNamedDeclaration') {
       const decl = (node as unknown as { declaration?: AstNode | null }).declaration;
-      if (decl?.type === 'VariableDeclaration') varDecl = decl;
+      if (decl?.type === 'VariableDeclaration') {
+        varDecl = decl;
+        exported = true;
+      }
     }
     if (!varDecl) continue;
     const declarations = (varDecl as unknown as { declarations?: AstNode[] }).declarations ?? [];
@@ -109,31 +120,53 @@ function findDesignDecl(ast: AstNode): DesignDeclLocation | null {
       const id = (d as unknown as { id?: { type?: string; name?: string } }).id;
       if (!id || id.type !== 'Identifier' || id.name !== 'design') continue;
       const init = (d as unknown as { init?: AstNode | null }).init;
-      if (!init) return null;
+      if (!init) continue;
       const inner = unwrapTypeAssertion(init);
       if (inner.type === 'ObjectExpression') {
-        return {
+        out.push({
           declStart: node.start,
           declEnd: node.end,
           objectStart: inner.start,
           objectEnd: inner.end,
-        };
-      }
-      if (inner.type === 'CallExpression') {
+          kind: 'object',
+          exported,
+          objectNode: inner,
+        });
+      } else if (inner.type === 'CallExpression') {
         const patch = extractMergeDesignPatchNode(inner);
         if (patch) {
-          return {
+          out.push({
             declStart: node.start,
             declEnd: node.end,
             objectStart: patch.start,
             objectEnd: patch.end,
-          };
+            kind: 'merge',
+            exported,
+            objectNode: patch,
+          });
         }
       }
-      return null;
     }
   }
-  return null;
+  return out;
+}
+
+function rankDesignDecl(d: DesignDeclInfo): number {
+  if (d.kind === 'merge' && d.exported) return 0;
+  if (d.kind === 'merge') return 1;
+  if (d.exported) return 2;
+  return 3;
+}
+
+function pickPrimaryDesignDecl(decls: DesignDeclInfo[]): DesignDeclInfo | null {
+  if (decls.length === 0) return null;
+  return decls.reduce((best, cur) => {
+    const rb = rankDesignDecl(best);
+    const rc = rankDesignDecl(cur);
+    if (rc < rb) return cur;
+    if (rc > rb) return best;
+    return cur.declStart > best.declStart ? cur : best;
+  });
 }
 
 function literalToValue(node: AstNode): unknown {
@@ -272,43 +305,22 @@ export type ParsedSlideDesign =
 export function parseSlideDesign(source: string): ParsedSlideDesign {
   const ast = parseSource(source);
   if (!ast) return { ok: false, exists: true, error: 'could not parse slide source' };
-  const loc = findDesignDecl(ast);
-  if (!loc) return { ok: false, exists: false };
-  const objectNode = findDesignObjectNode(ast);
-  if (!objectNode) return { ok: false, exists: true, error: 'design has unsupported initializer' };
+  const primary = pickPrimaryDesignDecl(enumerateDesignDeclarations(ast));
+  if (!primary) return { ok: false, exists: false };
   let value: unknown;
   try {
-    value = literalToValue(objectNode);
+    value = literalToValue(primary.objectNode);
   } catch (err) {
     return { ok: false, exists: true, error: (err as Error).message };
   }
   const merged = mergeDesign(defaultDesign, value as Partial<DesignSystem>);
+  const loc: DesignDeclLocation = {
+    declStart: primary.declStart,
+    declEnd: primary.declEnd,
+    objectStart: primary.objectStart,
+    objectEnd: primary.objectEnd,
+  };
   return { ok: true, design: merged, loc };
-}
-
-function findDesignObjectNode(ast: AstNode): AstNode | null {
-  const body = (ast as unknown as { program?: { body?: AstNode[] } }).program?.body ?? [];
-  for (const node of body) {
-    let varDecl: AstNode | null = null;
-    if (node.type === 'VariableDeclaration') varDecl = node;
-    else if (node.type === 'ExportNamedDeclaration') {
-      const decl = (node as unknown as { declaration?: AstNode | null }).declaration;
-      if (decl?.type === 'VariableDeclaration') varDecl = decl;
-    }
-    if (!varDecl) continue;
-    const declarations = (varDecl as unknown as { declarations?: AstNode[] }).declarations ?? [];
-    for (const d of declarations) {
-      const id = (d as unknown as { id?: { type?: string; name?: string } }).id;
-      if (!id || id.type !== 'Identifier' || id.name !== 'design') continue;
-      const init = (d as unknown as { init?: AstNode | null }).init;
-      if (!init) return null;
-      const inner = unwrapTypeAssertion(init);
-      if (inner.type === 'ObjectExpression') return inner;
-      if (inner.type === 'CallExpression') return extractMergeDesignPatchNode(inner);
-      return null;
-    }
-  }
-  return null;
 }
 
 type ImportInfo = { node: AstNode; source: string; specifiers: AstNode[] };
@@ -392,9 +404,23 @@ export function applyDesignWrite(source: string, next: DesignSystem): WriteResul
   const ast = parseSource(source);
   if (!ast) return { ok: false, status: 422, error: 'could not parse slide source' };
 
-  const loc = findDesignDecl(ast);
-  if (loc) {
-    const out = source.slice(0, loc.objectStart) + body + source.slice(loc.objectEnd);
+  const decls = enumerateDesignDeclarations(ast);
+  const primary = pickPrimaryDesignDecl(decls);
+  if (primary) {
+    let s = source;
+    const others = decls.filter((d) => d !== primary);
+    others.sort((a, b) => b.declStart - a.declStart);
+    for (const o of others) {
+      s = s.slice(0, o.declStart) + s.slice(o.declEnd);
+    }
+    const ast2 = parseSource(s);
+    if (!ast2)
+      return { ok: false, status: 422, error: 'could not parse slide source after cleanup' };
+    const primary2 = pickPrimaryDesignDecl(enumerateDesignDeclarations(ast2));
+    if (!primary2) {
+      return { ok: false, status: 422, error: 'lost design declaration after removing duplicates' };
+    }
+    const out = s.slice(0, primary2.objectStart) + body + s.slice(primary2.objectEnd);
     return { ok: true, source: out, created: false };
   }
 

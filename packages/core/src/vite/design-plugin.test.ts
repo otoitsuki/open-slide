@@ -55,6 +55,48 @@ const Cover: Page = () => <div style={{ color: 'var(--osd-accent)' }}>Hi</div>;
 export default [Cover];
 `;
 
+const SLIDE_WITH_STALE_CONST_PLUS_MERGE = `import {
+  defaultDesign,
+  mergeDesign,
+  type DesignSystem,
+  type Page,
+} from '@open-slide/core';
+
+const design: DesignSystem = {
+  palette: {
+    bg: '#f7f5f0',
+    text: '#1a1814',
+    accent: '#6d4cff',
+    accentSecondary: '#9580ff',
+    surface: '#eeeee9',
+    surfaceAlt: '#e6e4dc',
+    mutedText: '#6f6963',
+    border: '#dad6cd',
+    codeText: '#5b21b6',
+    commentText: '#9c9288',
+  },
+  fonts: {
+    display: 'Georgia, serif',
+    body: 'system-ui, sans-serif',
+    mono: 'monospace',
+  },
+  typeScale: { hero: 168, heading1: 96, body: 40, small: 28, code: 26, label: 22, chartLabel: 20, caption: 22 },
+  spacing: { pageMargin: 120, sectionGap: 48, itemGap: 24 },
+  shadow: { card: '0 1px 2px rgba(0,0,0,0.1)' },
+  radius: 12,
+};
+
+export const design: DesignSystem = mergeDesign(defaultDesign, {
+  palette: {
+    bg: '#171018',
+    accent: '#d6a44f',
+  },
+  radius: 18,
+} as Partial<DesignSystem>);
+
+export default [] satisfies Page[];
+`;
+
 describe('parseSlideDesign', () => {
   it('extracts design from a slide that declares one', () => {
     const r = parseSlideDesign(SLIDE_WITH_DESIGN);
@@ -91,6 +133,14 @@ describe('parseSlideDesign', () => {
     if (!r.ok) throw new Error('expected ok');
     expect(r.design.palette.accent).toBe('#d6a44f');
     expect(r.design.palette.bg).toBe(defaultDesign.palette.bg);
+    expect(r.design.radius).toBe(18);
+  });
+
+  it('prefers mergeDesign over a stale duplicate const design', () => {
+    const r = parseSlideDesign(SLIDE_WITH_STALE_CONST_PLUS_MERGE);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.design.palette.bg).toBe('#171018');
+    expect(r.design.palette.accent).toBe('#d6a44f');
     expect(r.design.radius).toBe(18);
   });
 });
@@ -149,6 +199,21 @@ describe('applyDesignWrite — slide with existing design', () => {
     expect(r.source.match(/\bconst design\b/g)).toHaveLength(1);
     expect(r.source).toContain('export const design: DesignSystem = mergeDesign(defaultDesign, {');
     expect(r.source).toContain("accent: '#ff0000'");
+  });
+
+  it('drops a stale const design when rewriting mergeDesign', () => {
+    const parsed = parseSlideDesign(SLIDE_WITH_STALE_CONST_PLUS_MERGE);
+    if (!parsed.ok) throw new Error('expected ok');
+    const next = mergeDesign(parsed.design, {
+      typeScale: { body: 55 } as DesignSystem['typeScale'],
+    });
+    const r = applyDesignWrite(SLIDE_WITH_STALE_CONST_PLUS_MERGE, next);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.created).toBe(false);
+    expect(r.source.match(/\bconst design\b/g)).toHaveLength(1);
+    expect(r.source).toContain('#171018');
+    expect(r.source).toContain('export const design: DesignSystem = mergeDesign(defaultDesign, {');
+    expect(r.source).toContain('body: 55');
   });
 });
 
