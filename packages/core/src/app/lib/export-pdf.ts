@@ -3,6 +3,7 @@ import { createRoot, type Root } from 'react-dom/client';
 import { designToCssVars } from './design';
 import { isFrameAnimationSettled, waitForDataWaitfor, waitForFonts } from './print-ready';
 import type { SlideModule } from './sdk';
+import { resolveSlideDesign } from './sdk';
 
 const PRINT_ROOT_ID = 'os-print-root';
 const PRINT_STYLE_ID = 'os-print-style';
@@ -99,7 +100,7 @@ export async function exportSlideAsPdf(
 
   onProgress?.({ phase: 'processing', current: 0, total, percent: 0 });
 
-  const designVars = slide.design ? designToCssVars(slide.design) : null;
+  const designVars = designToCssVars(resolveSlideDesign(slide));
 
   const reactRoots: Root[] = [];
   const frames: HTMLElement[] = [];
@@ -109,9 +110,7 @@ export async function exportSlideAsPdf(
     host.setAttribute('data-osd-canvas', '');
     host.style.width = '1920px';
     host.style.height = '1080px';
-    if (designVars) {
-      for (const [k, v] of Object.entries(designVars)) host.style.setProperty(k, v);
-    }
+    for (const [k, v] of Object.entries(designVars)) host.style.setProperty(k, v);
     const inner = document.createElement('div');
     inner.className = 'os-print-supersample';
     inner.style.width = '1920px';

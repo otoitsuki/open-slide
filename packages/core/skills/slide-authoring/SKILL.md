@@ -7,7 +7,9 @@ description: Technical reference for writing or editing open-slide pages — fil
 
 This skill is the **technical reference** for everything that happens inside `slides/<id>/index.tsx`. It does not own a workflow:
 
-- `create-slide` owns "draft a new deck" — it asks the user scoping questions, then delegates the *how* to this skill.
+- `create-slide` owns "draft a new deck" — it asks the user scoping questions, then delegates the *how* to this skill (or follows **`markdown-slide-deck`** when the source is Slidev-compatible markdown).
+- **`build-slide-from-markdown`** owns **path → full `slides/<id>/`** in one shot (canonical `.md`, `index.tsx`, **`mergeDesign`** tokens).
+- `markdown-slide-deck` owns the **Slidev-shaped `.md` spec** alongside **`markdown-slide-deck/template.md`** — agents transpile that into `index.tsx` using patterns here plus the `lightweight-siem` reference.
 - `apply-comments` owns "process inspector markers" — it finds markers and applies edits, but the edits themselves follow the rules here.
 - `current-slide` resolves deictic references ("this page", "the slide I'm on") to a concrete `slideId` + `pageIndex`. Consult it **first** when the user references the current slide without naming it, then come back here for how to edit it.
 - Any ad-hoc slide edit (manual tweak, one-off fix) should also consult this skill before touching the file.
@@ -20,7 +22,7 @@ When any of those paths reach the point of *writing React code for a page*, this
 - Entry is `slides/<id>/index.tsx`. Images/videos/fonts go under `slides/<id>/assets/`.
 - Do **not** touch `package.json`, `open-slide.config.ts`, or other slides.
 - Do not add dependencies. Only `react` and standard web APIs are available.
-- A slide is **one `index.tsx` plus `assets/`** — nothing else. Do not create sibling `.tsx`/`.ts` files (`Card.tsx`, `components/`, `helpers.ts`, etc.); helper components and constants go inside `index.tsx`. Do not create `README.md` or other prose files either.
+- A slide is **one `index.tsx` plus `assets/`** — nothing else. Do not create sibling `.tsx`/`.ts` files (`Card.tsx`, `components/`, `helpers.ts`, etc.); helper components and constants go inside `index.tsx`. Do not create `README.md` or other prose files either. **Markdown-first decks** (see **`markdown-slide-deck`** / **`create-slide`**) may also add **`slides/<id>/<id>.md`** as the Slidev-compatible source alongside `index.tsx` — keep the two in sync when editing.
 
 ## File contract
 
@@ -125,25 +127,56 @@ Themes are produced by the `create-theme` skill and are pure documentation: copy
 
 ## Design system (opt-in, per-slide)
 
+**Runtime default merge.** The viewer always applies **`mergeDesign(defaultDesign, slide.design ?? {})`** (see **`resolveSlideDesign`** on `@open-slide/core`) before painting the canvas and static exports. A page that only references `var(--osd-*)` still receives **every** token from the shipped **`defaultDesign`** when the module omits `export const design`. You should still **declare `export const design`** for any deck meant to be edited from the Design panel — the panel reads and writes that const.
+
 A slide can declare its own typed design tokens at the top of `index.tsx`:
 
 ```tsx
 import type { DesignSystem, Page } from '@open-slide/core';
 
 export const design: DesignSystem = {
-  palette: { bg: '#f7f5f0', text: '#1a1814', accent: '#6d4cff' },
+  palette: {
+    bg: '#f7f5f0',
+    text: '#1a1814',
+    accent: '#6d4cff',
+    accentSecondary: '#9580ff',
+    surface: '#eeeee9',
+    surfaceAlt: '#e6e4dc',
+    mutedText: '#6f6963',
+    border: '#dad6cd',
+    codeText: '#5b21b6',
+    commentText: '#9c9288',
+  },
   fonts: {
     display: 'Georgia, "Times New Roman", serif',
     body: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif',
+    mono: '"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace',
   },
-  typeScale: { hero: 168, body: 36 },
-  radius:    12,
+  typeScale: {
+    hero: 168,
+    heading1: 96,
+    body: 36,
+    small: 28,
+    code: 26,
+    label: 22,
+    chartLabel: 20,
+    caption: 22,
+  },
+  spacing: {
+    pageMargin: 120,
+    sectionGap: 48,
+    itemGap: 24,
+  },
+  shadow: {
+    card: '0 12px 40px rgba(26, 24, 20, 0.08)',
+  },
+  radius: 12,
 };
 ```
 
 `export` it (rather than plain `const`) so the framework can read the object and inject CSS variables at the canvas root automatically.
 
-The shape is intentionally minimal — it only covers what the Design panel can currently tweak. Anything outside this set (heading sizes, spacing, motion, extra palette colors) belongs as plain hard-coded constants in the slide file.
+The shape maps to **Markdown-first layouts** as well as TSX slides: semantic colors (`surface`, `codeText`, …), type scale (`hero`, `heading1`, `body`, `label`, `chartLabel`, …), spacing triplets, and card shadow all resolve to `--osd-*` variables. The CSS variables `--osd-size-heading-2` and `--osd-size-heading-3` are kept as **aliases** of `--osd-size-heading-1` for older slide markup.
 
 There are **two consumption surfaces**, and you should mix them inside the same slide:
 
@@ -151,7 +184,15 @@ There are **two consumption surfaces**, and you should mix them inside the same 
   ```tsx
   <div style={{ background: 'var(--osd-bg)', color: 'var(--osd-text)', borderRadius: 'var(--osd-radius)', fontFamily: 'var(--osd-font-body)', fontSize: 'var(--osd-size-body)' }}>
   ```
-  Available vars: `--osd-bg`, `--osd-text`, `--osd-accent`, `--osd-font-display`, `--osd-font-body`, `--osd-size-hero`, `--osd-size-body`, `--osd-radius`.
+  Available vars:
+  `--osd-bg`, `--osd-text`, `--osd-accent`, `--osd-accent-secondary`, `--osd-surface`, `--osd-surface-alt`, `--osd-muted-text`, `--osd-border`, `--osd-code-text`, `--osd-comment-text`,
+  `--osd-font-display`, `--osd-font-body`, `--osd-font-mono`,
+  `--osd-size-hero`, `--osd-size-heading-1` (with `--osd-size-heading-2` / `--osd-size-heading-3` matching the same size for compatibility), `--osd-size-body`, `--osd-size-small`, `--osd-size-code`, `--osd-size-label`, `--osd-size-chart-label`, `--osd-size-caption`,
+  `--osd-spacing-page-margin`, `--osd-spacing-section-gap`, `--osd-spacing-item-gap`,
+  `--osd-shadow-card`,
+  `--osd-radius`.
+
+  **SVG `<text>`:** put `--osd-*` font sizes on **`style`** (e.g. `style={{ fontSize: 'var(--osd-size-chart-label)', fill: 'var(--osd-muted-text)' }}`). Using the JSX `fontSize="var(...)"` attribute maps to an SVG presentation attribute; browsers often **ignore CSS variables there**, so chart-label / small sliders look ineffective until you switch to inline styles.
 
 - **Direct `design.X` reads** — when you need a JS number for arithmetic or to label something in the UI. These update via HMR after the panel commits the file, not while dragging.
   ```tsx
@@ -173,16 +214,45 @@ Format constraints (for the panel's AST writer):
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 
 export const design: DesignSystem = {
-  palette: { bg: '#0f172a', text: '#f8fafc', accent: '#fbbf24' },
+  palette: {
+    bg: '#0f172a',
+    text: '#f8fafc',
+    accent: '#fbbf24',
+    accentSecondary: '#fcd34d',
+    surface: '#1e293b',
+    surfaceAlt: '#334155',
+    mutedText: '#94a3b8',
+    border: '#334155',
+    codeText: '#f472b6',
+    commentText: '#64748b',
+  },
   fonts: {
     display: 'system-ui, -apple-system, sans-serif',
     body: 'system-ui, -apple-system, sans-serif',
+    mono: '"SF Mono", Menlo, monospace',
   },
-  typeScale: { hero: 180, body: 40 },
+  typeScale: {
+    hero: 180,
+    heading1: 96,
+    body: 40,
+    small: 28,
+    code: 26,
+    label: 22,
+    chartLabel: 20,
+    caption: 22,
+  },
+  spacing: {
+    pageMargin: 120,
+    sectionGap: 48,
+    itemGap: 24,
+  },
+  shadow: {
+    card: '0 12px 40px rgba(0, 0, 0, 0.35)',
+  },
   radius: 12,
 };
 
-// Extra colors / sizes outside the DesignSystem shape stay as plain consts.
+// Secondary palette tokens not mapped to DesignSystem stay as plain consts.
 const muted = '#94a3b8';
 
 const fill = {
@@ -355,7 +425,7 @@ This applies whenever the *visual element* repeats, not whenever the *data* does
 - ❌ Inconsistent palette across pages.
 - ❌ Installing packages. Only `react` and standard web APIs are available.
 - ❌ Writing CSS to a shared file. Inline styles or scoped classnames only.
-- ❌ Creating `README.md` or other prose files inside the slide folder.
+- ❌ Creating `README.md` or stray prose inside the slide folder (markdown-first decks may keep **`slides/<id>/<id>.md`** only — see **`markdown-slide-deck`**).
 - ❌ Editing `package.json`, `open-slide.config.ts`, or other slides.
 - ❌ Sprinkling `<ImagePlaceholder>` across pages "for visual interest". Placeholders are for content the user owns; they're not stock-photo slots.
 - ❌ Using a placeholder for an icon or decorative shape — those are typography/SVG problems, not asset problems.

@@ -14,7 +14,7 @@ export function Section({ title, children }: { title: string; children: React.Re
 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="grid grid-cols-[68px_1fr] items-center gap-3">
+    <div className="grid grid-cols-[88px_1fr] items-center gap-3">
       <Label className="text-[11px] font-normal text-muted-foreground">{label}</Label>
       <div className="flex min-w-0 items-center gap-1.5">{children}</div>
     </div>

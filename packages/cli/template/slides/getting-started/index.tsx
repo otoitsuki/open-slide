@@ -15,22 +15,41 @@ export const design: DesignSystem = {
     bg: '#08090a',
     text: '#f7f8f8',
     accent: '#7170ff',
+    accentSecondary: '#9580ff',
+    surface: '#eeeee9',
+    surfaceAlt: '#e6e4dc',
+    mutedText: '#6f6963',
+    border: '#dad6cd',
+    codeText: '#5b21b6',
+    commentText: '#9c9288',
   },
   fonts: {
     display: '"Inter", "SF Pro Display", system-ui, -apple-system, sans-serif',
     body: '"Inter", "SF Pro Display", system-ui, -apple-system, sans-serif',
+    mono: '"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace',
   },
   typeScale: {
     hero: 168,
+    heading1: 96,
     body: 36,
+    small: 28,
+    code: 26,
+    label: 22,
+    chartLabel: 20,
+    caption: 22,
+  },
+  spacing: {
+    pageMargin: 120,
+    sectionGap: 48,
+    itemGap: 24,
+  },
+  shadow: {
+    card: '0 12px 40px rgba(26, 24, 20, 0.08)',
   },
   radius: 16,
 };
 
-// ─── Local (non-tweakable) constants ──────────────────────────────────────────
-// Mirrors of the panel tokens for template-string / arithmetic use, plus the
-// secondary palette and the mono font (kept hard-coded — outside what the
-// Design panel currently exposes).
+// ─── Local constants ────────────────────────────────────────────────────────────
 const palette = {
   bg: design.palette.bg,
   text: design.palette.text,

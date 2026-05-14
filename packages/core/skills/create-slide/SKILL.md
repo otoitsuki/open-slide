@@ -1,6 +1,6 @@
 ---
 name: create-slide
-description: Use this skill when the user wants to create, draft, author, or generate new slides / a presentation in this open-slide repo. Triggers on phrases like "make slides about X", "create a presentation", "draft slides for", "new slide", or when the user asks to add content under `slides/`. Do NOT use for editing the framework itself — only for authoring content inside `slides/<id>/`.
+description: Use this skill when the user wants to create, draft, author, or generate new slides / a presentation in this open-slide repo. Triggers on phrases like "/create-slide", "make slides about X", "create a presentation", "draft slides for", "new slide", "from Slidev markdown", "markdown deck", Slidev-compatible markdown, or adding content under `slides/`. If the user names a concrete path to a `.md` file for a full build, prefer **`build-slide-from-markdown`**. Do NOT use for editing the framework itself — only for authoring content inside `slides/<id>/`.
 ---
 
 # Create a slide in open-slide
@@ -8,6 +8,27 @@ description: Use this skill when the user wants to create, draft, author, or gen
 This skill owns the **workflow** for drafting a new deck. The technical reference — file contract, 1920×1080 canvas, type scale, palette, layout, assets — lives in the **`slide-authoring`** skill. Read that skill whenever you need details on *how* a page is structured. This skill assumes you'll consult it before writing code.
 
 You only write files under `slides/<id>/`. Never modify `package.json`, `open-slide.config.ts`, or existing slides.
+
+## Markdown-first path (Slidev-compatible)
+
+Use this path when the user invokes **`/create-slide`**, **pastes or attaches Slidev-style markdown** (slides separated by `---`, YAML frontmatter per slide, `#` headings), or asks for a **markdown-first** / **standard markdown template** deck.
+
+**If they gave only a filesystem path to `.md`** (no paste), switch to **`build-slide-from-markdown`** — it owns path → folder + `mergeDesign` wiring.
+
+**Avoid** this path for heavily custom motion or layouts outside the markdown spec — use the TSX-first steps below instead.
+
+1. Read **`markdown-slide-deck`** — frontmatter keys, layouts, chart table shapes, transpilation checklist.
+2. Run **Step 1 — Pick a theme** (below) when `themes/` has theme files **and** the markdown does not already set **`design:`** or **`theme:`** on the first slide; otherwise merge those via **`mergeDesign`** per **`markdown-slide-deck`**. Apply palette/typography from the chosen interactive theme into `export const design` when transpiling.
+3. Pick **`slides/<id>/`** (kebab-case, no collision) — same as Step 3.
+4. Write **`slides/<id>/<id>.md`**: paste the user's markdown verbatim, or copy the empty scaffold from **`skills/markdown-slide-deck/template.md`** (shipped next to that skill under `@open-slide/core`) and fill it. Set or fix the first-block `title:` from the first `#` if needed.
+5. Write **`slides/<id>/index.tsx`**: transpile each slide into a `Page`. **Use the layout structure from the reference deck `lightweight-siem`** (`apps/demo/slides/lightweight-siem/index.tsx` in the open-slide repository — hero, bullets, split, chart variants, table; `design`, `Footer`, `Eyebrow`, `PageTitle`, `var(--osd-*)`). If that path is not in your workspace, follow **`markdown-slide-deck`** + **`slide-authoring`** only and reproduce equivalent layouts. Replace copy, table data, chart options, and asset paths only.
+6. **`export const meta`** from the first slide's `title:` or first `#`.
+7. Self-review with **`markdown-slide-deck`** + **`slide-authoring`** (assets, canvas fit).
+8. Hand off both file paths; say the **`.md` file is the standard Slidev-compatible spec** for future iteration.
+
+**Skip Step 2** (four-question aesthetic scoping) when the user already supplied complete markdown — only ask follow-ups if slides, tables, or `image:` paths are missing or ambiguous.
+
+If the request is **not** markdown-first, ignore this section and continue with Step 1.
 
 ## Step 1 — Pick a theme
 

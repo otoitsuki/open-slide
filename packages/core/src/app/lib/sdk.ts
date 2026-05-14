@@ -1,5 +1,5 @@
 import type { ComponentType } from 'react';
-import type { DesignSystem } from './design.ts';
+import { type DesignSystem, defaultDesign, mergeDesign } from './design.ts';
 
 export type Page = ComponentType;
 
@@ -15,6 +15,11 @@ export type SlideModule = {
   // Index-aligned with `default`.
   notes?: (string | undefined)[];
 };
+
+/** Merge slide `design` with shipped defaults so every `--osd-*` resolves even when a deck omits `export const design`. */
+export function resolveSlideDesign(slide: Pick<SlideModule, 'design'>): DesignSystem {
+  return mergeDesign(defaultDesign, (slide.design ?? {}) as Partial<DesignSystem>);
+}
 
 export type FolderIcon = { type: 'emoji'; value: string } | { type: 'color'; value: string };
 

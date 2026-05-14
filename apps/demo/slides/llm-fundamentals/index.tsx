@@ -1,12 +1,41 @@
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 
 export const design: DesignSystem = {
-  palette: { bg: '#f7f5f0', text: '#1a1814', accent: '#6d4cff' },
+  palette: {
+    bg: '#f7f5f0',
+    text: '#1a1814',
+    accent: '#6d4cff',
+    accentSecondary: '#9580ff',
+    surface: '#eeeee9',
+    surfaceAlt: '#e6e4dc',
+    mutedText: '#6f6963',
+    border: '#dad6cd',
+    codeText: '#5b21b6',
+    commentText: '#9c9288',
+  },
   fonts: {
     display: '"Times New Roman", "Georgia", serif',
     body: '-apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", system-ui, sans-serif',
+    mono: '"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace',
   },
-  typeScale: { hero: 196, body: 28 },
+  typeScale: {
+    hero: 196,
+    heading1: 96,
+    body: 28,
+    small: 28,
+    code: 26,
+    label: 22,
+    chartLabel: 20,
+    caption: 22,
+  },
+  spacing: {
+    pageMargin: 120,
+    sectionGap: 48,
+    itemGap: 24,
+  },
+  shadow: {
+    card: '0 12px 40px rgba(26, 24, 20, 0.08)',
+  },
   radius: 16,
 };
 

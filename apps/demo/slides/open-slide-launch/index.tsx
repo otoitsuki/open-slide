@@ -3,12 +3,41 @@ import type { CSSProperties } from 'react';
 import openSlide from './assets/open-slide.png';
 
 export const design: DesignSystem = {
-  palette: { bg: '#f6f3ec', text: '#0a0a0a', accent: '#ff4f1a' },
+  palette: {
+    bg: '#f6f3ec',
+    text: '#0a0a0a',
+    accent: '#ff4f1a',
+    accentSecondary: '#9580ff',
+    surface: '#eeeee9',
+    surfaceAlt: '#e6e4dc',
+    mutedText: '#6f6963',
+    border: '#dad6cd',
+    codeText: '#5b21b6',
+    commentText: '#9c9288',
+  },
   fonts: {
     display: "'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
     body: "'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+    mono: '"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace',
   },
-  typeScale: { hero: 320, body: 40 },
+  typeScale: {
+    hero: 320,
+    heading1: 96,
+    body: 40,
+    small: 28,
+    code: 26,
+    label: 22,
+    chartLabel: 20,
+    caption: 22,
+  },
+  spacing: {
+    pageMargin: 120,
+    sectionGap: 48,
+    itemGap: 24,
+  },
+  shadow: {
+    card: '0 12px 40px rgba(26, 24, 20, 0.08)',
+  },
   radius: 0,
 };
 

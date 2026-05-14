@@ -120,6 +120,69 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
             }, 'design:palette.accent')
           }
         />
+        <ColorField
+          label={t.stylePanel.accentSecondaryLabel}
+          value={draft.palette.accentSecondary}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.accentSecondary = v;
+            }, 'design:palette.accentSecondary')
+          }
+        />
+        <ColorField
+          label={t.stylePanel.surfaceLabel}
+          value={draft.palette.surface}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.surface = v;
+            }, 'design:palette.surface')
+          }
+        />
+        <ColorField
+          label={t.stylePanel.surfaceAltLabel}
+          value={draft.palette.surfaceAlt}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.surfaceAlt = v;
+            }, 'design:palette.surfaceAlt')
+          }
+        />
+        <ColorField
+          label={t.stylePanel.mutedTextLabel}
+          value={draft.palette.mutedText}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.mutedText = v;
+            }, 'design:palette.mutedText')
+          }
+        />
+        <ColorField
+          label={t.stylePanel.borderLabel}
+          value={draft.palette.border}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.border = v;
+            }, 'design:palette.border')
+          }
+        />
+        <ColorField
+          label={t.stylePanel.codeTextLabel}
+          value={draft.palette.codeText}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.codeText = v;
+            }, 'design:palette.codeText')
+          }
+        />
+        <ColorField
+          label={t.stylePanel.commentTextLabel}
+          value={draft.palette.commentText}
+          onChange={(v) =>
+            update((d) => {
+              d.palette.commentText = v;
+            }, 'design:palette.commentText')
+          }
+        />
       </Section>
 
       <Separator />
@@ -143,6 +206,16 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
             }, 'design:fonts.body')
           }
         />
+        <FontField
+          label={t.stylePanel.monoFontLabel}
+          value={draft.fonts.mono}
+          onChange={(v) =>
+            update((d) => {
+              d.fonts.mono = v;
+            }, 'design:fonts.mono')
+          }
+        />
+        <Separator />
         <SliderField
           label={t.stylePanel.heroLabel}
           value={draft.typeScale.hero}
@@ -157,6 +230,19 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <SliderField
+          label={t.stylePanel.headingLabel}
+          value={draft.typeScale.heading1}
+          min={28}
+          max={140}
+          step={2}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.heading1 = n;
+            }, 'design:typeScale.heading1')
+          }
+        />
+        <SliderField
           label={t.stylePanel.bodyLabel}
           value={draft.typeScale.body}
           min={16}
@@ -167,6 +253,129 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
             update((d) => {
               d.typeScale.body = n;
             }, 'design:typeScale.body')
+          }
+        />
+        <SliderField
+          label={t.stylePanel.smallLabel}
+          value={draft.typeScale.small}
+          min={18}
+          max={44}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.small = n;
+            }, 'design:typeScale.small')
+          }
+        />
+        <SliderField
+          label={t.stylePanel.codeSizeLabel}
+          value={draft.typeScale.code}
+          min={18}
+          max={40}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.code = n;
+            }, 'design:typeScale.code')
+          }
+        />
+        <SliderField
+          label={t.stylePanel.labelSizeLabel}
+          value={draft.typeScale.label}
+          min={16}
+          max={36}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.label = n;
+            }, 'design:typeScale.label')
+          }
+        />
+        <SliderField
+          label={t.stylePanel.chartLabelSizeLabel}
+          value={draft.typeScale.chartLabel}
+          min={14}
+          max={32}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.chartLabel = n;
+            }, 'design:typeScale.chartLabel')
+          }
+        />
+        <SliderField
+          label={t.stylePanel.captionLabel}
+          value={draft.typeScale.caption}
+          min={16}
+          max={36}
+          step={1}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.typeScale.caption = n;
+            }, 'design:typeScale.caption')
+          }
+        />
+      </Section>
+
+      <Separator />
+
+      <Section title={t.stylePanel.spacingSection}>
+        <SliderField
+          label={t.stylePanel.pageMarginLabel}
+          value={draft.spacing.pageMargin}
+          min={48}
+          max={220}
+          step={4}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.spacing.pageMargin = n;
+            }, 'design:spacing.pageMargin')
+          }
+        />
+        <SliderField
+          label={t.stylePanel.sectionGapLabel}
+          value={draft.spacing.sectionGap}
+          min={16}
+          max={96}
+          step={4}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.spacing.sectionGap = n;
+            }, 'design:spacing.sectionGap')
+          }
+        />
+        <SliderField
+          label={t.stylePanel.itemGapLabel}
+          value={draft.spacing.itemGap}
+          min={8}
+          max={64}
+          step={2}
+          suffix="px"
+          onChange={(n) =>
+            update((d) => {
+              d.spacing.itemGap = n;
+            }, 'design:spacing.itemGap')
+          }
+        />
+      </Section>
+
+      <Separator />
+
+      <Section title={t.stylePanel.shadowsSection}>
+        <TextField
+          label={t.stylePanel.cardShadowLabel}
+          value={draft.shadow.card}
+          onChange={(v) =>
+            update((d) => {
+              d.shadow.card = v;
+            }, 'design:shadow.card')
           }
         />
       </Section>
@@ -212,6 +421,27 @@ export function DesignToggleButton({
       <Palette className="size-3.5" />
       <span className="hidden md:inline">{t.stylePanel.designToggle}</span>
     </Button>
+  );
+}
+
+function TextField({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <Field label={label}>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-8 min-w-0 flex-1 font-mono text-[11px]"
+        spellCheck={false}
+      />
+    </Field>
   );
 }
 

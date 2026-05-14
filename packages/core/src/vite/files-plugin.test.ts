@@ -11,6 +11,45 @@ import {
   validateName,
   validateSlideName,
 } from './files-plugin.ts';
+import { normalizeFoldersManifest } from './folders-manifest.ts';
+
+describe('normalizeFoldersManifest', () => {
+  it('upgrades legacy string folder entries to valid folder objects', () => {
+    expect(
+      normalizeFoldersManifest({
+        folders: ['game-proposal'],
+        assignments: { 'game-proposal': 'game-proposal' },
+      }),
+    ).toEqual({
+      folders: [
+        {
+          id: 'game-proposal',
+          name: 'Game Proposal',
+          icon: { type: 'emoji', value: '🗂️' },
+        },
+      ],
+      assignments: { 'game-proposal': 'game-proposal' },
+    });
+  });
+
+  it('fills missing object icons and drops assignments to unknown folders', () => {
+    expect(
+      normalizeFoldersManifest({
+        folders: [{ id: 'proposal', name: 'Proposal' }],
+        assignments: { one: 'proposal', two: 'missing' },
+      }),
+    ).toEqual({
+      folders: [
+        {
+          id: 'proposal',
+          name: 'Proposal',
+          icon: { type: 'emoji', value: '🗂️' },
+        },
+      ],
+      assignments: { one: 'proposal' },
+    });
+  });
+});
 
 describe('validateName', () => {
   it('trims whitespace and accepts non-empty strings', () => {

@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { type DesignSystem, defaultDesign } from '../app/lib/design.ts';
-import {
-  applyDesignWrite,
-  mergeDesign,
-  parseSlideDesign,
-  serializeDesign,
-} from './design-plugin.ts';
+import { type DesignSystem, defaultDesign, mergeDesign } from '../app/lib/design.ts';
+import { applyDesignWrite, parseSlideDesign, serializeDesign } from './design-plugin.ts';
 
 const SLIDE_WITH_DESIGN = `import type { DesignSystem, Page } from '@open-slide/core';
 
@@ -41,6 +36,25 @@ const Cover: Page = () => (
 export default [Cover];
 `;
 
+const SLIDE_WITH_MERGED_DESIGN = `import {
+  defaultDesign,
+  mergeDesign,
+  type DesignSystem,
+  type Page,
+} from '@open-slide/core';
+
+export const design: DesignSystem = mergeDesign(defaultDesign, {
+  palette: {
+    accent: '#d6a44f',
+  },
+  radius: 18,
+} as Partial<DesignSystem>);
+
+const Cover: Page = () => <div style={{ color: 'var(--osd-accent)' }}>Hi</div>;
+
+export default [Cover];
+`;
+
 describe('parseSlideDesign', () => {
   it('extracts design from a slide that declares one', () => {
     const r = parseSlideDesign(SLIDE_WITH_DESIGN);
@@ -70,6 +84,14 @@ describe('parseSlideDesign', () => {
     const r = parseSlideDesign(src);
     if (!r.ok) throw new Error('expected ok');
     expect(r.design.radius).toBe(defaultDesign.radius);
+  });
+
+  it('extracts the patch object from mergeDesign(defaultDesign, ...)', () => {
+    const r = parseSlideDesign(SLIDE_WITH_MERGED_DESIGN);
+    if (!r.ok) throw new Error('expected ok');
+    expect(r.design.palette.accent).toBe('#d6a44f');
+    expect(r.design.palette.bg).toBe(defaultDesign.palette.bg);
+    expect(r.design.radius).toBe(18);
   });
 });
 
@@ -115,6 +137,18 @@ describe('applyDesignWrite — slide with existing design', () => {
     const r2 = parseSlideDesign(written.source);
     if (!r2.ok) throw new Error('expected ok');
     expect(r2.design).toEqual(r1.design);
+  });
+
+  it('rewrites an existing mergeDesign patch instead of inserting a duplicate design const', () => {
+    const next = mergeDesign(defaultDesign, {
+      palette: { accent: '#ff0000' } as DesignSystem['palette'],
+    });
+    const r = applyDesignWrite(SLIDE_WITH_MERGED_DESIGN, next);
+    if (!r.ok) throw new Error(r.error);
+    expect(r.created).toBe(false);
+    expect(r.source.match(/\bconst design\b/g)).toHaveLength(1);
+    expect(r.source).toContain('export const design: DesignSystem = mergeDesign(defaultDesign, {');
+    expect(r.source).toContain("accent: '#ff0000'");
   });
 });
 

@@ -4,6 +4,7 @@ import path from 'node:path';
 import fg from 'fast-glob';
 import { loadConfigFromFile, type Plugin, type ViteDevServer } from 'vite';
 import type { OpenSlideConfig } from '../config.ts';
+import { normalizeFoldersManifest } from './folders-manifest.ts';
 
 export type { OpenSlideConfig };
 
@@ -26,14 +27,7 @@ type FoldersManifest = {
 async function readFoldersManifest(file: string): Promise<FoldersManifest> {
   try {
     const raw = await fs.readFile(file, 'utf8');
-    const parsed = JSON.parse(raw) as Partial<FoldersManifest>;
-    return {
-      folders: Array.isArray(parsed.folders) ? parsed.folders : [],
-      assignments:
-        parsed.assignments && typeof parsed.assignments === 'object'
-          ? (parsed.assignments as Record<string, string>)
-          : {},
-    };
+    return normalizeFoldersManifest(JSON.parse(raw));
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
       return { folders: [], assignments: {} };

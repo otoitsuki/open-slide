@@ -1,7 +1,8 @@
 import { type CSSProperties, type ReactNode, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { type DesignSystem, designToCssVars } from '../lib/design';
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from '../lib/sdk';
+import type { DesignSystem } from '../lib/design';
+import { designToCssVars } from '../lib/design';
+import { CANVAS_HEIGHT, CANVAS_WIDTH, resolveSlideDesign } from '../lib/sdk';
 
 type Props = {
   children: ReactNode;
@@ -42,6 +43,7 @@ export function SlideCanvas({
   const s = scale ?? fitScale;
   const scaledW = CANVAS_WIDTH * s;
   const scaledH = CANVAS_HEIGHT * s;
+  const canvasDesign = resolveSlideDesign({ design });
 
   return (
     <div ref={containerRef} className={cn('relative h-full w-full overflow-hidden', className)}>
@@ -74,7 +76,7 @@ export function SlideCanvas({
               height: CANVAS_HEIGHT,
               transform: `scale(${s})`,
               transformOrigin: 'top left',
-              ...(design ? designToCssVars(design) : {}),
+              ...designToCssVars(canvasDesign),
             } as CSSProperties
           }
         >

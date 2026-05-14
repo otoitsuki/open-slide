@@ -4,12 +4,41 @@ import nextMark from './assets/next-js.svg';
 import vercelMark from './assets/vercel.svg';
 
 export const design: DesignSystem = {
-  palette: { bg: '#ffffff', text: '#000000', accent: '#ff0080' },
+  palette: {
+    bg: '#ffffff',
+    text: '#000000',
+    accent: '#ff0080',
+    accentSecondary: '#9580ff',
+    surface: '#eeeee9',
+    surfaceAlt: '#e6e4dc',
+    mutedText: '#6f6963',
+    border: '#dad6cd',
+    codeText: '#5b21b6',
+    commentText: '#9c9288',
+  },
   fonts: {
     display: "'Geist', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
     body: "'Geist', 'Inter', -apple-system, BlinkMacSystemFont, system-ui, sans-serif",
+    mono: '"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace',
   },
-  typeScale: { hero: 176, body: 28 },
+  typeScale: {
+    hero: 176,
+    heading1: 96,
+    body: 28,
+    small: 28,
+    code: 26,
+    label: 22,
+    chartLabel: 20,
+    caption: 22,
+  },
+  spacing: {
+    pageMargin: 120,
+    sectionGap: 48,
+    itemGap: 24,
+  },
+  shadow: {
+    card: '0 12px 40px rgba(26, 24, 20, 0.08)',
+  },
   radius: 12,
 };
 

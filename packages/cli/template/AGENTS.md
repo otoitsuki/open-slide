@@ -12,7 +12,7 @@ You are authoring **slides** in this repo. Every slide is arbitrary React code t
 
 ## Which skill to use
 
-- **Drafting a new deck** — use the `create-slide` skill. It walks through scoping questions, structure, and hand-off.
+- **Drafting a new deck** — use the `create-slide` skill. For **Slidev-compatible markdown** (`---` slides + frontmatter), it hands off to **`markdown-slide-deck`** — paste markdown and transpile to `index.tsx` using that spec. When the user gives **only a path** to a `.md` file, use **`build-slide-from-markdown`** for the full folder + **`mergeDesign`** pipeline.
 - **Applying inspector comments** (`@slide-comment` markers in a page) — use the `apply-comments` skill.
 - **Creating or extracting a theme** — use the `create-theme` skill. Themes live as markdown under `themes/<id>.md` and are read by `create-slide` before authoring.
 - **Resolving "this page" / "this element"** — when the user references the current slide or selection without naming it, consult the `current-slide` skill. It reads the dev server's `node_modules/.open-slide/current.json` to find which slide, page, and inspector-picked element they mean.

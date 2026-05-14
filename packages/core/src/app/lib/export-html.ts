@@ -1,7 +1,9 @@
 import { createElement } from 'react';
 import { createRoot } from 'react-dom/client';
+import type { DesignSystem } from './design';
 import { designToCssVars } from './design';
 import type { SlideModule } from './sdk';
+import { resolveSlideDesign } from './sdk';
 
 type AssetEntry = { name: string; bytes: Uint8Array };
 
@@ -45,7 +47,7 @@ export async function exportSlideAsHtml(slide: SlideModule, slideId: string): Pr
     pagesHtml: rewrittenPages,
     bundledCss: rewrittenCss,
     externalLinks,
-    design: slide.design,
+    design: resolveSlideDesign(slide),
   });
 
   const htmlBytes = new TextEncoder().encode(html);
@@ -231,7 +233,7 @@ function buildHtml(opts: {
   pagesHtml: string[];
   bundledCss: string;
   externalLinks: string;
-  design: SlideModule['design'];
+  design: DesignSystem;
 }): string {
   const pagesMarkup = opts.pagesHtml
     .map(
@@ -239,11 +241,9 @@ function buildHtml(opts: {
     )
     .join('');
 
-  const frameStyle = opts.design
-    ? Object.entries(designToCssVars(opts.design))
-        .map(([k, v]) => `${k}: ${v};`)
-        .join(' ')
-    : '';
+  const frameStyle = Object.entries(designToCssVars(opts.design))
+    .map(([k, v]) => `${k}: ${v};`)
+    .join(' ');
 
   return `<!doctype html>
 <html lang="en">
@@ -263,7 +263,7 @@ html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font-f
 <style>${opts.bundledCss}</style>
 </head>
 <body>
-<div class="os-stage"><div class="os-frame" id="os-frame" data-osd-canvas${frameStyle ? ` style="${escapeAttr(frameStyle)}"` : ''}>${pagesMarkup}</div></div>
+<div class="os-stage"><div class="os-frame" id="os-frame" data-osd-canvas style="${escapeAttr(frameStyle)}">${pagesMarkup}</div></div>
 <div class="os-counter"><span id="os-cur">1</span> / <span id="os-total">${opts.pagesHtml.length}</span></div>
 <script>
 (function () {

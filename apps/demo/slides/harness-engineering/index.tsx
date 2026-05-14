@@ -1,23 +1,44 @@
 import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 
 export const design: DesignSystem = {
-  palette: { bg: '#05070a', text: '#e6edf3', accent: '#39ff88' },
+  palette: {
+    bg: '#05070a',
+    text: '#e6edf3',
+    accent: '#39ff88',
+    accentSecondary: '#9580ff',
+    surface: '#eeeee9',
+    surfaceAlt: '#e6e4dc',
+    mutedText: '#6f6963',
+    border: '#dad6cd',
+    codeText: '#5b21b6',
+    commentText: '#9c9288',
+  },
   fonts: {
     display: "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace",
     body: "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace",
+    mono: "'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace",
   },
-  typeScale: { hero: 156, body: 24 },
+  typeScale: {
+    hero: 156,
+    heading1: 96,
+    body: 24,
+    small: 28,
+    code: 26,
+    label: 22,
+    chartLabel: 20,
+    caption: 22,
+  },
+  spacing: {
+    pageMargin: 120,
+    sectionGap: 48,
+    itemGap: 24,
+  },
+  shadow: {
+    card: '0 12px 40px rgba(26, 24, 20, 0.08)',
+  },
   radius: 0,
 };
 
-/* ─────────────── Design tokens (neon-terminal) ─────────────── */
-
-/**
- * Tokens that aren't part of the panel-tweakable `design` surface above.
- * The bg / text / accent / fonts / hero / body / radius come in via
- * `var(--osd-*)` so the Design panel can update them live; everything else
- * (extended palette, spacing, page counts) lives here as a flat token set.
- */
 const tokens = {
   color: {
     surface: '#0d1117',

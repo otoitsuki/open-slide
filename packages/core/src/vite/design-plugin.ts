@@ -58,6 +58,23 @@ type DesignDeclLocation = {
   objectEnd: number;
 };
 
+function unwrapTypeAssertion(node: AstNode): AstNode {
+  if (node.type === 'TSSatisfiesExpression' || node.type === 'TSAsExpression') {
+    const expr = (node as unknown as { expression?: AstNode }).expression;
+    if (expr) return expr;
+  }
+  return node;
+}
+
+function extractMergeDesignPatchNode(callNode: AstNode): AstNode | null {
+  const callee = (callNode as unknown as { callee?: { type?: string; name?: string } }).callee;
+  if (callee?.type !== 'Identifier' || callee.name !== 'mergeDesign') return null;
+  const args = (callNode as unknown as { arguments?: AstNode[] }).arguments ?? [];
+  if (args.length < 2) return null;
+  const patch = unwrapTypeAssertion(args[1]);
+  return patch.type === 'ObjectExpression' ? patch : null;
+}
+
 function findDesignDecl(ast: AstNode): DesignDeclLocation | null {
   const body = (ast as unknown as { program?: { body?: AstNode[] } }).program?.body ?? [];
   for (const node of body) {
@@ -75,18 +92,27 @@ function findDesignDecl(ast: AstNode): DesignDeclLocation | null {
       if (!id || id.type !== 'Identifier' || id.name !== 'design') continue;
       const init = (d as unknown as { init?: AstNode | null }).init;
       if (!init) return null;
-      let inner: AstNode = init;
-      if (inner.type === 'TSSatisfiesExpression' || inner.type === 'TSAsExpression') {
-        const expr = (inner as unknown as { expression?: AstNode }).expression;
-        if (expr) inner = expr;
+      const inner = unwrapTypeAssertion(init);
+      if (inner.type === 'ObjectExpression') {
+        return {
+          declStart: node.start,
+          declEnd: node.end,
+          objectStart: inner.start,
+          objectEnd: inner.end,
+        };
       }
-      if (inner.type !== 'ObjectExpression') return null;
-      return {
-        declStart: node.start,
-        declEnd: node.end,
-        objectStart: inner.start,
-        objectEnd: inner.end,
-      };
+      if (inner.type === 'CallExpression') {
+        const patch = extractMergeDesignPatchNode(inner);
+        if (patch) {
+          return {
+            declStart: node.start,
+            declEnd: node.end,
+            objectStart: patch.start,
+            objectEnd: patch.end,
+          };
+        }
+      }
+      return null;
     }
   }
   return null;
@@ -250,13 +276,10 @@ function findDesignObjectNode(ast: AstNode): AstNode | null {
       if (!id || id.type !== 'Identifier' || id.name !== 'design') continue;
       const init = (d as unknown as { init?: AstNode | null }).init;
       if (!init) return null;
-      let inner: AstNode = init;
-      if (inner.type === 'TSSatisfiesExpression' || inner.type === 'TSAsExpression') {
-        const expr = (inner as unknown as { expression?: AstNode }).expression;
-        if (expr) inner = expr;
-      }
-      if (inner.type !== 'ObjectExpression') return null;
-      return inner;
+      const inner = unwrapTypeAssertion(init);
+      if (inner.type === 'ObjectExpression') return inner;
+      if (inner.type === 'CallExpression') return extractMergeDesignPatchNode(inner);
+      return null;
     }
   }
   return null;

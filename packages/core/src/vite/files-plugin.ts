@@ -4,6 +4,7 @@ import type { ServerResponse } from 'node:http';
 import path from 'node:path';
 import { parse as babelParse } from '@babel/parser';
 import type { Connect, Plugin, ViteDevServer } from 'vite';
+import { normalizeFoldersManifest } from './folders-manifest.ts';
 
 const FOLDER_ID_RE = /^f-[a-f0-9]{8}$/;
 const SLIDE_ID_RE = /^[a-z0-9_-]+$/i;
@@ -96,23 +97,14 @@ function json(res: ServerResponse, status: number, body: unknown) {
   res.end(JSON.stringify(body));
 }
 
-function emptyManifest(): FoldersManifest {
-  return { folders: [], assignments: {} };
-}
-
 async function readManifest(file: string): Promise<FoldersManifest> {
   try {
     const raw = await fs.readFile(file, 'utf8');
-    const parsed = JSON.parse(raw) as Partial<FoldersManifest>;
-    return {
-      folders: Array.isArray(parsed.folders) ? parsed.folders : [],
-      assignments:
-        parsed.assignments && typeof parsed.assignments === 'object'
-          ? (parsed.assignments as Record<string, string>)
-          : {},
-    };
+    return normalizeFoldersManifest(JSON.parse(raw));
   } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === 'ENOENT') return emptyManifest();
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return normalizeFoldersManifest({});
+    }
     throw err;
   }
 }

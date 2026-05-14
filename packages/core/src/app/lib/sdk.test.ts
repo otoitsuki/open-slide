@@ -1,13 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { CANVAS_HEIGHT, CANVAS_WIDTH } from './sdk.ts';
+import { type DesignSystem, defaultDesign } from './design.ts';
+import { resolveSlideDesign } from './sdk.ts';
 
-describe('canvas constants', () => {
-  it('targets a 1920x1080 canvas', () => {
-    expect(CANVAS_WIDTH).toBe(1920);
-    expect(CANVAS_HEIGHT).toBe(1080);
+describe('resolveSlideDesign', () => {
+  it('returns defaults when design is omitted', () => {
+    const d = resolveSlideDesign({});
+    expect(d.palette.bg).toBe(defaultDesign.palette.bg);
+    expect(d.typeScale.hero).toBe(defaultDesign.typeScale.hero);
+    expect(d.radius).toBe(defaultDesign.radius);
   });
 
-  it('preserves a 16:9 aspect ratio', () => {
-    expect(CANVAS_WIDTH / CANVAS_HEIGHT).toBeCloseTo(16 / 9);
+  it('deep-merges partial slide design over defaults', () => {
+    const d = resolveSlideDesign({
+      design: { palette: { accent: '#ff0000' } } as unknown as DesignSystem,
+    });
+    expect(d.palette.accent).toBe('#ff0000');
+    expect(d.palette.bg).toBe(defaultDesign.palette.bg);
+    expect(d.typeScale.body).toBe(defaultDesign.typeScale.body);
   });
 });

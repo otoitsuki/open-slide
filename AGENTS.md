@@ -2,7 +2,7 @@
 
 You are working on the **open-slide framework** — the runtime, CLI, and tooling that ship to npm.
 
-(Slide-authoring guidance lives in the `slide-authoring` / `create-slide` skills under `apps/demo/.claude/skills/`. Use those only when editing files inside `apps/demo/slides/`.)
+(Slide-authoring guidance ships in `packages/core/skills/` — e.g. `slide-authoring`, `create-slide`, `markdown-slide-deck`, **`build-slide-from-markdown`**. Use those when editing slide content; for this repo’s demo, that usually means `apps/demo/slides/`.)
 
 ## Layout
 

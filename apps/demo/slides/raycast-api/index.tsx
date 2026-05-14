@@ -2,12 +2,41 @@ import type { DesignSystem, Page, SlideMeta } from '@open-slide/core';
 import raycastIcon from './assets/raycast.svg';
 
 export const design: DesignSystem = {
-  palette: { bg: '#0E0E0E', text: '#F5F5F5', accent: '#FF6363' },
+  palette: {
+    bg: '#0E0E0E',
+    text: '#F5F5F5',
+    accent: '#FF6363',
+    accentSecondary: '#9580ff',
+    surface: '#eeeee9',
+    surfaceAlt: '#e6e4dc',
+    mutedText: '#6f6963',
+    border: '#dad6cd',
+    codeText: '#5b21b6',
+    commentText: '#9c9288',
+  },
   fonts: {
     display: '-apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", system-ui, sans-serif',
     body: '-apple-system, BlinkMacSystemFont, "Inter", "SF Pro Display", system-ui, sans-serif',
+    mono: '"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace',
   },
-  typeScale: { hero: 112, body: 24 },
+  typeScale: {
+    hero: 112,
+    heading1: 96,
+    body: 24,
+    small: 28,
+    code: 26,
+    label: 22,
+    chartLabel: 20,
+    caption: 22,
+  },
+  spacing: {
+    pageMargin: 120,
+    sectionGap: 48,
+    itemGap: 24,
+  },
+  shadow: {
+    card: '0 12px 40px rgba(26, 24, 20, 0.08)',
+  },
   radius: 14,
 };
 
