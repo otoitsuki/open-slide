@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import type { ServerResponse } from 'node:http';
 import path from 'node:path';
@@ -9,6 +10,8 @@ import { walkAll, walkJsx } from './babel-walk.ts';
 
 const MARKER_RE =
   /\{\/\*\s*@slide-comment\s+id="(c-[a-f0-9]+)"\s+ts="([^"]+)"\s+text="([A-Za-z0-9_-]+={0,2})"\s*\*\/\}/g;
+const MD_MARKER_RE =
+  /<!--\s*@slide-comment\s+id="(c-[a-f0-9]+)"\s+ts="([^"]+)"\s+text="([A-Za-z0-9_-]+={0,2})"\s*-->/g;
 
 const SLIDE_ID_RE = /^[a-z0-9_-]+$/i;
 
@@ -67,12 +70,21 @@ function json(res: ServerResponse, status: number, body: unknown) {
   res.end(JSON.stringify(body));
 }
 
-function resolveSlidePath(userCwd: string, slidesDir: string, slideId: string): string | null {
+type ResolvedSlidePath = { entry: string; isMarkdown: boolean };
+
+function resolveSlidePath(
+  userCwd: string,
+  slidesDir: string,
+  slideId: string,
+): ResolvedSlidePath | null {
   if (!SLIDE_ID_RE.test(slideId)) return null;
   const slidesRoot = path.resolve(userCwd, slidesDir);
-  const full = path.resolve(slidesRoot, slideId, 'index.tsx');
-  if (!full.startsWith(slidesRoot + path.sep)) return null;
-  return full;
+  const slideRoot = path.resolve(slidesRoot, slideId);
+  if (!slideRoot.startsWith(slidesRoot + path.sep)) return null;
+  const tsx = path.join(slideRoot, 'index.tsx');
+  const md = path.join(slideRoot, 'index.md');
+  const entry = existsSync(tsx) ? tsx : existsSync(md) ? md : tsx;
+  return { entry, isMarkdown: entry.endsWith('.md') };
 }
 
 export function parseMarkers(source: string): Comment[] {
@@ -81,7 +93,8 @@ export function parseMarkers(source: string): Comment[] {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     MARKER_RE.lastIndex = 0;
-    const m = MARKER_RE.exec(line);
+    MD_MARKER_RE.lastIndex = 0;
+    const m = MARKER_RE.exec(line) ?? MD_MARKER_RE.exec(line);
     if (!m) continue;
     const [, id, ts, textB64] = m;
     try {
@@ -1462,12 +1475,17 @@ export function commentsPlugin(opts: CommentsPluginOptions): Plugin {
             const slideId = body.slideId ?? '';
             const file = resolveSlidePath(userCwd, slidesDir, slideId);
             if (!file) return json(res, 400, { error: 'invalid slideId' });
+            if (file.isMarkdown) {
+              return json(res, 422, {
+                error: 'Markdown visual edits are not supported yet. Add an inspect note instead.',
+              });
+            }
             if (!body.line || body.line < 1) return json(res, 400, { error: 'invalid line' });
             if (!Array.isArray(body.ops)) return json(res, 400, { error: 'missing ops' });
 
             let source: string;
             try {
-              source = await fs.readFile(file, 'utf8');
+              source = await fs.readFile(file.entry, 'utf8');
             } catch {
               return json(res, 404, { error: 'slide not found' });
             }
@@ -1475,7 +1493,7 @@ export function commentsPlugin(opts: CommentsPluginOptions): Plugin {
             const result = applyEdit(source, body.line, body.column ?? 0, body.ops);
             if (!result.ok) return json(res, result.status, { error: result.error });
             const changed = result.source !== source;
-            if (changed) await fs.writeFile(file, result.source, 'utf8');
+            if (changed) await fs.writeFile(file.entry, result.source, 'utf8');
             return json(res, 200, { ok: true, changed });
           }
 
@@ -1487,11 +1505,16 @@ export function commentsPlugin(opts: CommentsPluginOptions): Plugin {
             const slideId = body.slideId ?? '';
             const file = resolveSlidePath(userCwd, slidesDir, slideId);
             if (!file) return json(res, 400, { error: 'invalid slideId' });
+            if (file.isMarkdown) {
+              return json(res, 422, {
+                error: 'Markdown visual edits are not supported yet. Add an inspect note instead.',
+              });
+            }
             if (!Array.isArray(body.edits)) return json(res, 400, { error: 'missing edits' });
 
             let source: string;
             try {
-              source = await fs.readFile(file, 'utf8');
+              source = await fs.readFile(file.entry, 'utf8');
             } catch {
               return json(res, 404, { error: 'slide not found' });
             }
@@ -1512,7 +1535,7 @@ export function commentsPlugin(opts: CommentsPluginOptions): Plugin {
               }
             }
             const changed = source !== original;
-            if (changed) await fs.writeFile(file, source, 'utf8');
+            if (changed) await fs.writeFile(file.entry, source, 'utf8');
             return json(res, 200, { ok: true, changed, results });
           }
 
@@ -1533,7 +1556,7 @@ export function commentsPlugin(opts: CommentsPluginOptions): Plugin {
             if (!file) return json(res, 400, { error: 'invalid slideId' });
             let source: string;
             try {
-              source = await fs.readFile(file, 'utf8');
+              source = await fs.readFile(file.entry, 'utf8');
             } catch {
               return json(res, 404, { error: 'slide not found' });
             }
@@ -1552,9 +1575,24 @@ export function commentsPlugin(opts: CommentsPluginOptions): Plugin {
 
             let source: string;
             try {
-              source = await fs.readFile(file, 'utf8');
+              source = await fs.readFile(file.entry, 'utf8');
             } catch {
               return json(res, 404, { error: 'slide not found' });
+            }
+
+            if (file.isMarkdown) {
+              const id = newId();
+              const ts = new Date().toISOString();
+              const payload = b64urlEncode(JSON.stringify({ note: body.text, hint: body.hint }));
+              const lines = source.split('\n');
+              const index = Math.max(0, Math.min(lines.length, body.line - 1));
+              lines.splice(
+                index,
+                0,
+                `<!-- @slide-comment id="${id}" ts="${ts}" text="${payload}" -->`,
+              );
+              await fs.writeFile(file.entry, lines.join('\n'), 'utf8');
+              return json(res, 200, { id, line: index + 1 });
             }
 
             const plan = findInsertion(source, body.line, body.column);
@@ -1572,7 +1610,7 @@ export function commentsPlugin(opts: CommentsPluginOptions): Plugin {
             const marker = `\n${plan.indent}{/* @slide-comment id="${id}" ts="${ts}" text="${payload}" */}`;
 
             const next = source.slice(0, plan.offset) + marker + source.slice(plan.offset);
-            await fs.writeFile(file, next, 'utf8');
+            await fs.writeFile(file.entry, next, 'utf8');
             const markerLine = offsetToLine(next, plan.offset + 1);
             return json(res, 200, { id, line: markerLine });
           }
@@ -1586,19 +1624,23 @@ export function commentsPlugin(opts: CommentsPluginOptions): Plugin {
 
             let source: string;
             try {
-              source = await fs.readFile(file, 'utf8');
+              source = await fs.readFile(file.entry, 'utf8');
             } catch {
               return json(res, 404, { error: 'slide not found' });
             }
 
             const lines = source.split('\n');
-            const idRe = new RegExp(
-              `\\{\\/\\*\\s*@slide-comment\\s+id="${id}"\\s+ts="[^"]+"\\s+text="[A-Za-z0-9_\\-]+={0,2}"\\s*\\*\\/\\}`,
-            );
+            const idRe = file.isMarkdown
+              ? new RegExp(
+                  `<!--\\s*@slide-comment\\s+id="${id}"\\s+ts="[^"]+"\\s+text="[A-Za-z0-9_\\-]+={0,2}"\\s*-->`,
+                )
+              : new RegExp(
+                  `\\{\\/\\*\\s*@slide-comment\\s+id="${id}"\\s+ts="[^"]+"\\s+text="[A-Za-z0-9_\\-]+={0,2}"\\s*\\*\\/\\}`,
+                );
             const hit = lines.findIndex((l) => idRe.test(l));
             if (hit === -1) return json(res, 404, { error: 'marker not found' });
             lines.splice(hit, 1);
-            await fs.writeFile(file, lines.join('\n'), 'utf8');
+            await fs.writeFile(file.entry, lines.join('\n'), 'utf8');
             return json(res, 200, { ok: true });
           }
 

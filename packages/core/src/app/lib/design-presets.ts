@@ -1,4 +1,4 @@
-import { type DesignSystem, type PartialDesignSystem, defaultDesign, mergeDesign } from './design';
+import { type DesignSystem, defaultDesign, mergeDesign, type PartialDesignSystem } from './design';
 
 const SANS_SYSTEM = '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif';
 const SANS_INTER = '"Inter", system-ui, sans-serif';

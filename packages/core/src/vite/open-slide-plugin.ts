@@ -43,7 +43,7 @@ function resolved(id: string): string {
 async function findSlides(userCwd: string, slidesDir: string): Promise<string[]> {
   const abs = path.resolve(userCwd, slidesDir);
   if (!existsSync(abs)) return [];
-  const hits = await fg('*/index.{tsx,jsx,ts,js}', {
+  const hits = await fg('*/index.{tsx,jsx,ts,js,md}', {
     cwd: abs,
     absolute: true,
     onlyFiles: true,
@@ -54,6 +54,10 @@ async function findSlides(userCwd: string, slidesDir: string): Promise<string[]>
 function toId(absFile: string, slidesRoot: string): string {
   const rel = path.relative(slidesRoot, absFile);
   return rel.split(path.sep)[0];
+}
+
+function devFsPath(abs: string): string {
+  return `/@fs/${abs.replace(/^\/+/, '')}`;
 }
 
 const META_THEME_RE = /(?:^|[\s,{])theme\s*:\s*['"]([^'"]+)['"]/;
@@ -85,6 +89,7 @@ function extractMetaTheme(src: string): string | null {
 }
 
 async function readSlideTheme(abs: string): Promise<string | null> {
+  if (abs.endsWith('.md')) return null;
   try {
     const src = await fs.readFile(abs, 'utf8');
     return extractMetaTheme(src);
@@ -99,11 +104,18 @@ async function generateSlidesModule(
   isDev: boolean,
 ): Promise<string> {
   const entries = await Promise.all(
-    files.map(async (abs) => {
+    files.map(async (abs, index) => {
       const id = toId(abs, slidesRoot);
-      const importPath = isDev ? `/@fs/${abs.replace(/^\/+/, '')}` : abs;
+      const importPath = isDev ? devFsPath(abs) : abs;
+      const isMarkdown = abs.endsWith('.md');
+      const designPath = path.join(path.dirname(abs), 'design.json');
+      const hasDesign = isMarkdown && existsSync(designPath);
+      const dirAbs = path.dirname(abs);
+      const assetBase = isDev
+        ? `${devFsPath(dirAbs)}/`
+        : `/${path.relative(slidesRoot, dirAbs).split(path.sep).join('/')}/`;
       const theme = await readSlideTheme(abs);
-      return { id, importPath, theme };
+      return { id, importPath, isMarkdown, designPath, hasDesign, assetBase, index, theme };
     }),
   );
 
@@ -128,8 +140,24 @@ if (import.meta.hot) {
 }
 `
     : '';
+
+  const markdownImports = entries
+    .filter((e) => e.isMarkdown)
+    .map((e) => {
+      const rawImport = `import md${e.index} from ${JSON.stringify(`${e.importPath}?raw`)};`;
+      const designImport = e.hasDesign
+        ? `\nimport design${e.index} from ${JSON.stringify(`${isDev ? devFsPath(e.designPath) : e.designPath}?raw`)};`
+        : '';
+      return `${rawImport}${designImport}`;
+    })
+    .join('\n');
+
   const cases = entries
     .map((e) => {
+      if (e.isMarkdown) {
+        const designExpr = e.hasDesign ? `JSON.parse(design${e.index})` : 'undefined';
+        return `    case ${JSON.stringify(e.id)}: return Promise.resolve(markdownToSlideModule(md${e.index}, { id: ${JSON.stringify(e.id)}, design: ${designExpr}, assetBase: ${JSON.stringify(e.assetBase)} }));`;
+      }
       const importExpr = isDev
         ? `import(/* @vite-ignore */ ${JSON.stringify(`${e.importPath}?t=`)} + slideImportTokens[${JSON.stringify(e.id)}])`
         : `import(${JSON.stringify(e.importPath)})`;
@@ -138,6 +166,9 @@ if (import.meta.hot) {
     .join('\n');
 
   return `// virtual:open-slide/slides — generated
+import { markdownToSlideModule } from '@/lib/markdown-slide';
+${markdownImports}
+
 export const slideIds = ${ids};
 export const slideThemes = ${themesJson};
 ${devRuntime}
@@ -163,7 +194,8 @@ export function openSlidePlugin(opts: OpenSlidePluginOptions): Plugin {
     if (rel.startsWith('..') || path.isAbsolute(rel)) return null;
     const parts = rel.split(path.sep);
     if (parts.length !== 2) return null;
-    if (!/^index\.(tsx|jsx|ts|js)$/.test(parts[1])) return null;
+    if (parts[1] === 'design.json') return parts[0];
+    if (!/^index\.(tsx|jsx|ts|js|md)$/.test(parts[1])) return null;
     return parts[0];
   };
   let slideChangeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -241,10 +273,6 @@ export function openSlidePlugin(opts: OpenSlidePluginOptions): Plugin {
           server.ws.send({ type: 'full-reload' });
         }, 150);
       };
-      // Vite's `root` is the core app dir, so chokidar doesn't watch the
-      // user's slides folder by default. Add it explicitly — and pass the
-      // directory itself, since Vite sets `disableGlobbing: true` and would
-      // otherwise treat a glob pattern as a literal path.
       if (existsSync(slidesRoot)) server.watcher.add(slidesRoot);
       server.watcher.on('add', (p) => {
         if (isSlideEntry(p)) reload();

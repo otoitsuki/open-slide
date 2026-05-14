@@ -1,4 +1,4 @@
-import { Palette, Shuffle, X } from 'lucide-react';
+import { Palette, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Field, NumberField, Section } from '@/components/panel/panel-fields';
 import { PanelShell, usePanelMount } from '@/components/panel/panel-shell';
@@ -28,7 +28,7 @@ type DesignPanelProps = {
 };
 
 export function DesignPanel({ open, onClose }: DesignPanelProps) {
-  const { draft, exists, warning, loaded, dirty, update, shuffle } = useDesignPanelState();
+  const { draft, exists, warning, loaded, dirty, update } = useDesignPanelState();
   const { mounted, animVisible } = usePanelMount(open);
   const t = useLocale();
 
@@ -60,27 +60,15 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
               />
             )}
           </div>
-          <div className="flex items-center gap-0.5">
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={shuffle}
-              aria-label={t.stylePanel.shuffleAria}
-              title={t.stylePanel.shuffleTitle}
-            >
-              <Shuffle className="size-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className="text-muted-foreground hover:text-foreground"
-              onClick={onClose}
-              aria-label={t.stylePanel.closePanelAria}
-            >
-              <X className="size-3.5" />
-            </Button>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={onClose}
+            aria-label={t.stylePanel.closePanelAria}
+          >
+            <X className="size-3.5" />
+          </Button>
         </>
       }
       banner={
@@ -121,16 +109,16 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <ColorField
-          label={t.stylePanel.accentSecondaryLabel}
-          value={draft.palette.accentSecondary}
+          label="Accent secondary"
+          value={draft.palette.accent2}
           onChange={(v) =>
             update((d) => {
-              d.palette.accentSecondary = v;
-            }, 'design:palette.accentSecondary')
+              d.palette.accent2 = v;
+            }, 'design:palette.accent2')
           }
         />
         <ColorField
-          label={t.stylePanel.surfaceLabel}
+          label="Surface"
           value={draft.palette.surface}
           onChange={(v) =>
             update((d) => {
@@ -139,7 +127,7 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <ColorField
-          label={t.stylePanel.surfaceAltLabel}
+          label="Surface alt"
           value={draft.palette.surfaceAlt}
           onChange={(v) =>
             update((d) => {
@@ -148,16 +136,16 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <ColorField
-          label={t.stylePanel.mutedTextLabel}
-          value={draft.palette.mutedText}
+          label="Muted text"
+          value={draft.palette.muted}
           onChange={(v) =>
             update((d) => {
-              d.palette.mutedText = v;
-            }, 'design:palette.mutedText')
+              d.palette.muted = v;
+            }, 'design:palette.muted')
           }
         />
         <ColorField
-          label={t.stylePanel.borderLabel}
+          label="Border"
           value={draft.palette.border}
           onChange={(v) =>
             update((d) => {
@@ -166,21 +154,21 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <ColorField
-          label={t.stylePanel.codeTextLabel}
-          value={draft.palette.codeText}
+          label="Code text"
+          value={draft.palette.code}
           onChange={(v) =>
             update((d) => {
-              d.palette.codeText = v;
-            }, 'design:palette.codeText')
+              d.palette.code = v;
+            }, 'design:palette.code')
           }
         />
         <ColorField
-          label={t.stylePanel.commentTextLabel}
-          value={draft.palette.commentText}
+          label="Comment text"
+          value={draft.palette.comment}
           onChange={(v) =>
             update((d) => {
-              d.palette.commentText = v;
-            }, 'design:palette.commentText')
+              d.palette.comment = v;
+            }, 'design:palette.comment')
           }
         />
       </Section>
@@ -207,7 +195,7 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <FontField
-          label={t.stylePanel.monoFontLabel}
+          label="Mono font"
           value={draft.fonts.mono}
           onChange={(v) =>
             update((d) => {
@@ -215,7 +203,6 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
             }, 'design:fonts.mono')
           }
         />
-        <Separator />
         <SliderField
           label={t.stylePanel.heroLabel}
           value={draft.typeScale.hero}
@@ -230,16 +217,16 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <SliderField
-          label={t.stylePanel.headingLabel}
-          value={draft.typeScale.heading1}
-          min={28}
+          label="Heading"
+          value={draft.typeScale.heading}
+          min={32}
           max={140}
           step={2}
           suffix="px"
           onChange={(n) =>
             update((d) => {
-              d.typeScale.heading1 = n;
-            }, 'design:typeScale.heading1')
+              d.typeScale.heading = n;
+            }, 'design:typeScale.heading')
           }
         />
         <SliderField
@@ -256,23 +243,10 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <SliderField
-          label={t.stylePanel.smallLabel}
-          value={draft.typeScale.small}
-          min={18}
-          max={44}
-          step={1}
-          suffix="px"
-          onChange={(n) =>
-            update((d) => {
-              d.typeScale.small = n;
-            }, 'design:typeScale.small')
-          }
-        />
-        <SliderField
-          label={t.stylePanel.codeSizeLabel}
+          label="Code"
           value={draft.typeScale.code}
-          min={18}
-          max={40}
+          min={12}
+          max={48}
           step={1}
           suffix="px"
           onChange={(n) =>
@@ -282,10 +256,10 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <SliderField
-          label={t.stylePanel.labelSizeLabel}
+          label="Label"
           value={draft.typeScale.label}
-          min={16}
-          max={36}
+          min={10}
+          max={40}
           step={1}
           suffix="px"
           onChange={(n) =>
@@ -295,10 +269,10 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <SliderField
-          label={t.stylePanel.chartLabelSizeLabel}
+          label="Chart label"
           value={draft.typeScale.chartLabel}
-          min={14}
-          max={32}
+          min={12}
+          max={56}
           step={1}
           suffix="px"
           onChange={(n) =>
@@ -308,74 +282,16 @@ export function DesignPanel({ open, onClose }: DesignPanelProps) {
           }
         />
         <SliderField
-          label={t.stylePanel.captionLabel}
+          label="Caption"
           value={draft.typeScale.caption}
-          min={16}
-          max={36}
+          min={10}
+          max={32}
           step={1}
           suffix="px"
           onChange={(n) =>
             update((d) => {
               d.typeScale.caption = n;
             }, 'design:typeScale.caption')
-          }
-        />
-      </Section>
-
-      <Separator />
-
-      <Section title={t.stylePanel.spacingSection}>
-        <SliderField
-          label={t.stylePanel.pageMarginLabel}
-          value={draft.spacing.pageMargin}
-          min={48}
-          max={220}
-          step={4}
-          suffix="px"
-          onChange={(n) =>
-            update((d) => {
-              d.spacing.pageMargin = n;
-            }, 'design:spacing.pageMargin')
-          }
-        />
-        <SliderField
-          label={t.stylePanel.sectionGapLabel}
-          value={draft.spacing.sectionGap}
-          min={16}
-          max={96}
-          step={4}
-          suffix="px"
-          onChange={(n) =>
-            update((d) => {
-              d.spacing.sectionGap = n;
-            }, 'design:spacing.sectionGap')
-          }
-        />
-        <SliderField
-          label={t.stylePanel.itemGapLabel}
-          value={draft.spacing.itemGap}
-          min={8}
-          max={64}
-          step={2}
-          suffix="px"
-          onChange={(n) =>
-            update((d) => {
-              d.spacing.itemGap = n;
-            }, 'design:spacing.itemGap')
-          }
-        />
-      </Section>
-
-      <Separator />
-
-      <Section title={t.stylePanel.shadowsSection}>
-        <TextField
-          label={t.stylePanel.cardShadowLabel}
-          value={draft.shadow.card}
-          onChange={(v) =>
-            update((d) => {
-              d.shadow.card = v;
-            }, 'design:shadow.card')
           }
         />
       </Section>
@@ -421,27 +337,6 @@ export function DesignToggleButton({
       <Palette className="size-3.5" />
       <span className="hidden md:inline">{t.stylePanel.designToggle}</span>
     </Button>
-  );
-}
-
-function TextField({
-  label,
-  value,
-  onChange,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <Field label={label}>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-8 min-w-0 flex-1 font-mono text-[11px]"
-        spellCheck={false}
-      />
-    </Field>
   );
 }
 

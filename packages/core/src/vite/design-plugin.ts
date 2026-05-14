@@ -1,9 +1,10 @@
+import { existsSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import type { ServerResponse } from 'node:http';
 import path from 'node:path';
 import { parse as babelParse } from '@babel/parser';
 import type { Connect, Plugin, ViteDevServer } from 'vite';
-import { type DesignSystem, defaultDesign } from '../app/lib/design.ts';
+import { type DesignSystem, defaultDesign, mergeDesign } from '../app/lib/design.ts';
 import type { AstNode } from './babel-walk.ts';
 
 const SLIDE_ID_RE = /^[a-z0-9_-]+$/i;
@@ -31,12 +32,29 @@ function json(res: ServerResponse, status: number, body: unknown) {
   res.end(JSON.stringify(body));
 }
 
-function resolveSlidePath(userCwd: string, slidesDir: string, slideId: string): string | null {
+type ResolvedSlidePath = {
+  entry: string;
+  designPath: string;
+  isMarkdown: boolean;
+};
+
+function resolveSlidePath(
+  userCwd: string,
+  slidesDir: string,
+  slideId: string,
+): ResolvedSlidePath | null {
   if (!SLIDE_ID_RE.test(slideId)) return null;
   const slidesRoot = path.resolve(userCwd, slidesDir);
-  const full = path.resolve(slidesRoot, slideId, 'index.tsx');
-  if (!full.startsWith(`${slidesRoot}${path.sep}`)) return null;
-  return full;
+  const slideRoot = path.resolve(slidesRoot, slideId);
+  if (!slideRoot.startsWith(`${slidesRoot}${path.sep}`)) return null;
+  const tsx = path.join(slideRoot, 'index.tsx');
+  const md = path.join(slideRoot, 'index.md');
+  const entry = existsSync(tsx) ? tsx : existsSync(md) ? md : tsx;
+  return {
+    entry,
+    designPath: path.join(slideRoot, 'design.json'),
+    isMarkdown: entry.endsWith('.md'),
+  };
 }
 
 function parseSource(source: string): AstNode | null {
@@ -181,21 +199,6 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
 }
 
-export function mergeDesign(base: DesignSystem, patch: Partial<DesignSystem>): DesignSystem {
-  const out = JSON.parse(JSON.stringify(base)) as DesignSystem;
-  const apply = (target: Record<string, unknown>, src: Record<string, unknown>) => {
-    for (const [k, v] of Object.entries(src)) {
-      if (isPlainObject(v) && isPlainObject(target[k])) {
-        apply(target[k] as Record<string, unknown>, v);
-      } else {
-        target[k] = v;
-      }
-    }
-  };
-  if (isPlainObject(patch)) apply(out as unknown as Record<string, unknown>, patch);
-  return out;
-}
-
 function indent(level: number): string {
   return '  '.repeat(level);
 }
@@ -236,6 +239,29 @@ function serializeValue(value: unknown, level: number): string {
 
 export function serializeDesign(design: DesignSystem): string {
   return serializeValue(design as unknown as Record<string, unknown>, 0);
+}
+
+function serializeDesignJson(design: DesignSystem): string {
+  return `${JSON.stringify(design, null, 2)}\n`;
+}
+
+async function readMarkdownDesign(
+  file: string,
+): Promise<{ design: DesignSystem; exists: boolean; warning: string | null }> {
+  try {
+    const raw = await fs.readFile(file, 'utf8');
+    const parsed = JSON.parse(raw) as Partial<DesignSystem>;
+    return { design: mergeDesign(defaultDesign, parsed), exists: true, warning: null };
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      return { design: defaultDesign, exists: false, warning: null };
+    }
+    return {
+      design: defaultDesign,
+      exists: true,
+      warning: `design.json could not be parsed: ${(err as Error).message}`,
+    };
+  }
 }
 
 export type ParsedSlideDesign =
@@ -400,14 +426,18 @@ export function designPlugin(opts: DesignPluginOptions): Plugin {
         const url = new URL(req.url ?? '/', 'http://local');
         const method = req.method ?? 'GET';
         const slideId = url.searchParams.get('slideId') ?? '';
-        const file = resolveSlidePath(userCwd, slidesDir, slideId);
-        if (!file) return json(res, 400, { error: 'invalid slideId' });
+        const resolved = resolveSlidePath(userCwd, slidesDir, slideId);
+        if (!resolved) return json(res, 400, { error: 'invalid slideId' });
 
         try {
           if (method === 'GET' && url.pathname === '/') {
+            if (resolved.isMarkdown) {
+              const markdownDesign = await readMarkdownDesign(resolved.designPath);
+              return json(res, 200, markdownDesign);
+            }
             let source: string;
             try {
-              source = await fs.readFile(file, 'utf8');
+              source = await fs.readFile(resolved.entry, 'utf8');
             } catch {
               return json(res, 404, { error: 'slide not found' });
             }
@@ -427,9 +457,16 @@ export function designPlugin(opts: DesignPluginOptions): Plugin {
             if (!patch || typeof patch !== 'object') {
               return json(res, 400, { error: 'missing patch object' });
             }
+            if (resolved.isMarkdown) {
+              const current = await readMarkdownDesign(resolved.designPath);
+              if (current.warning) return json(res, 422, { error: current.warning });
+              const merged = mergeDesign(current.design, patch);
+              await fs.writeFile(resolved.designPath, serializeDesignJson(merged), 'utf8');
+              return json(res, 200, { ok: true, design: merged, created: !current.exists });
+            }
             let source: string;
             try {
-              source = await fs.readFile(file, 'utf8');
+              source = await fs.readFile(resolved.entry, 'utf8');
             } catch {
               return json(res, 404, { error: 'slide not found' });
             }
@@ -441,20 +478,26 @@ export function designPlugin(opts: DesignPluginOptions): Plugin {
             const merged = mergeDesign(baseDesign, patch);
             const written = applyDesignWrite(source, merged);
             if (!written.ok) return json(res, written.status, { error: written.error });
-            if (written.source !== source) await fs.writeFile(file, written.source, 'utf8');
+            if (written.source !== source)
+              await fs.writeFile(resolved.entry, written.source, 'utf8');
             return json(res, 200, { ok: true, design: merged, created: written.created });
           }
 
           if (method === 'POST' && url.pathname === '/reset') {
+            if (resolved.isMarkdown) {
+              await fs.writeFile(resolved.designPath, serializeDesignJson(defaultDesign), 'utf8');
+              return json(res, 200, { ok: true, design: defaultDesign, created: true });
+            }
             let source: string;
             try {
-              source = await fs.readFile(file, 'utf8');
+              source = await fs.readFile(resolved.entry, 'utf8');
             } catch {
               return json(res, 404, { error: 'slide not found' });
             }
             const written = applyDesignWrite(source, defaultDesign);
             if (!written.ok) return json(res, written.status, { error: written.error });
-            if (written.source !== source) await fs.writeFile(file, written.source, 'utf8');
+            if (written.source !== source)
+              await fs.writeFile(resolved.entry, written.source, 'utf8');
             return json(res, 200, { ok: true, design: defaultDesign, created: written.created });
           }
 

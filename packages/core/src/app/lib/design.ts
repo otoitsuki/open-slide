@@ -2,13 +2,13 @@ export type DesignPalette = {
   bg: string;
   text: string;
   accent: string;
-  accentSecondary: string;
+  accent2: string;
   surface: string;
   surfaceAlt: string;
-  mutedText: string;
+  muted: string;
   border: string;
-  codeText: string;
-  commentText: string;
+  code: string;
+  comment: string;
 };
 
 export type DesignFonts = {
@@ -19,31 +19,18 @@ export type DesignFonts = {
 
 export type DesignTypeScale = {
   hero: number;
-  heading1: number;
+  heading: number;
   body: number;
-  small: number;
   code: number;
   label: number;
   chartLabel: number;
   caption: number;
 };
 
-export type DesignSpacing = {
-  pageMargin: number;
-  sectionGap: number;
-  itemGap: number;
-};
-
-export type DesignShadow = {
-  card: string;
-};
-
 export type DesignSystem = {
   palette: DesignPalette;
   fonts: DesignFonts;
   typeScale: DesignTypeScale;
-  spacing: DesignSpacing;
-  shadow: DesignShadow;
   radius: number;
 };
 
@@ -51,8 +38,6 @@ export type PartialDesignSystem = {
   palette?: Partial<DesignPalette>;
   fonts?: Partial<DesignFonts>;
   typeScale?: Partial<DesignTypeScale>;
-  spacing?: Partial<DesignSpacing>;
-  shadow?: Partial<DesignShadow>;
   radius?: number;
 };
 
@@ -62,8 +47,10 @@ function isPlainObject(v: unknown): v is Record<string, unknown> {
 
 function stripLegacyTypeScale(design: DesignSystem): void {
   const ts = design.typeScale as unknown as Record<string, unknown>;
+  delete ts.heading1;
   delete ts.heading2;
   delete ts.heading3;
+  delete ts.small;
 }
 
 export function mergeDesign(base: DesignSystem, patch: PartialDesignSystem): DesignSystem {
@@ -84,38 +71,27 @@ export function mergeDesign(base: DesignSystem, patch: PartialDesignSystem): Des
 }
 
 export function designToCssVars(d: DesignSystem): Record<string, string> {
-  const p = d.palette;
-  const f = d.fonts;
-  const t = d.typeScale;
-  const s = d.spacing;
   return {
-    '--osd-bg': p.bg,
-    '--osd-text': p.text,
-    '--osd-accent': p.accent,
-    '--osd-accent-secondary': p.accentSecondary,
-    '--osd-surface': p.surface,
-    '--osd-surface-alt': p.surfaceAlt,
-    '--osd-muted-text': p.mutedText,
-    '--osd-border': p.border,
-    '--osd-code-text': p.codeText,
-    '--osd-comment-text': p.commentText,
-    '--osd-font-display': f.display,
-    '--osd-font-body': f.body,
-    '--osd-font-mono': f.mono,
-    '--osd-size-hero': `${t.hero}px`,
-    '--osd-size-heading-1': `${t.heading1}px`,
-    '--osd-size-heading-2': `${t.heading1}px`,
-    '--osd-size-heading-3': `${t.heading1}px`,
-    '--osd-size-body': `${t.body}px`,
-    '--osd-size-small': `${t.small}px`,
-    '--osd-size-code': `${t.code}px`,
-    '--osd-size-label': `${t.label}px`,
-    '--osd-size-chart-label': `${t.chartLabel}px`,
-    '--osd-size-caption': `${t.caption}px`,
-    '--osd-spacing-page-margin': `${s.pageMargin}px`,
-    '--osd-spacing-section-gap': `${s.sectionGap}px`,
-    '--osd-spacing-item-gap': `${s.itemGap}px`,
-    '--osd-shadow-card': d.shadow.card,
+    '--osd-bg': d.palette.bg,
+    '--osd-text': d.palette.text,
+    '--osd-accent': d.palette.accent,
+    '--osd-accent-2': d.palette.accent2,
+    '--osd-surface': d.palette.surface,
+    '--osd-surface-alt': d.palette.surfaceAlt,
+    '--osd-muted': d.palette.muted,
+    '--osd-border': d.palette.border,
+    '--osd-code': d.palette.code,
+    '--osd-comment': d.palette.comment,
+    '--osd-font-display': d.fonts.display,
+    '--osd-font-body': d.fonts.body,
+    '--osd-font-mono': d.fonts.mono,
+    '--osd-size-hero': `${d.typeScale.hero}px`,
+    '--osd-size-heading': `${d.typeScale.heading}px`,
+    '--osd-size-body': `${d.typeScale.body}px`,
+    '--osd-size-code': `${d.typeScale.code}px`,
+    '--osd-size-label': `${d.typeScale.label}px`,
+    '--osd-size-chart-label': `${d.typeScale.chartLabel}px`,
+    '--osd-size-caption': `${d.typeScale.caption}px`,
     '--osd-radius': `${d.radius}px`,
   };
 }
@@ -131,36 +107,27 @@ export const defaultDesign: DesignSystem = {
     bg: '#f7f5f0',
     text: '#1a1814',
     accent: '#6d4cff',
-    accentSecondary: '#9580ff',
-    surface: '#eeeee9',
-    surfaceAlt: '#e6e4dc',
-    mutedText: '#6f6963',
-    border: '#dad6cd',
-    codeText: '#5b21b6',
-    commentText: '#9c9288',
+    accent2: '#4f46e5',
+    surface: '#ffffff',
+    surfaceAlt: '#f4f1ea',
+    muted: '#888078',
+    border: '#ded6c9',
+    code: '#2f2a24',
+    comment: '#7a736a',
   },
   fonts: {
     display: 'Georgia, "Times New Roman", serif',
     body: '-apple-system, BlinkMacSystemFont, "Inter", system-ui, sans-serif',
-    mono: '"SF Mono", "JetBrains Mono", Menlo, Consolas, monospace',
+    mono: '"SF Mono", "JetBrains Mono", Menlo, monospace',
   },
   typeScale: {
     hero: 168,
-    heading1: 96,
+    heading: 84,
     body: 36,
-    small: 28,
     code: 26,
     label: 22,
-    chartLabel: 20,
-    caption: 22,
-  },
-  spacing: {
-    pageMargin: 120,
-    sectionGap: 48,
-    itemGap: 24,
-  },
-  shadow: {
-    card: '0 12px 40px rgba(26, 24, 20, 0.08)',
+    chartLabel: 28,
+    caption: 18,
   },
   radius: 12,
 };

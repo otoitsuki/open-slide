@@ -68,8 +68,8 @@ export function PanelShell({
           {header}
         </header>
         {banner}
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="flex flex-col">{children}</div>
+        <ScrollArea className="min-h-0 flex-1 overflow-hidden">
+          <div className="flex min-h-full flex-col">{children}</div>
         </ScrollArea>
         {footer && <div className="shrink-0 border-t border-hairline">{footer}</div>}
       </div>

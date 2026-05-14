@@ -3,8 +3,6 @@ export { ImagePlaceholder } from './app/components/image-placeholder.tsx';
 export type {
   DesignFonts,
   DesignPalette,
-  DesignShadow,
-  DesignSpacing,
   DesignSystem,
   DesignTypeScale,
 } from './app/lib/design.ts';
